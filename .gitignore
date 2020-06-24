@@ -1,0 +1,12 @@
+*.out
+main.pdf
+cover_letter.pdf
+*.out
+*.log
+*.aux
+*.bbl
+*.blg
+*.upa
+*.upb
+*.gz
+auto/
