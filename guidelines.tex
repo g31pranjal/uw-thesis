@@ -26,11 +26,27 @@ Apart from adjacency lists, a \gls{gdbms} also have to store properties that app
 \section{Query execution in GDBMSs}
 \label{sec:operators}
 
-	First example
+In this section, we review the general execution of queries in a \gls{gdbms} by analyzing major operators used in the generated query plans.
 
+We use the openCypher query language \cite{cypher} to query the property graph in a \gls{gdbms}.  A user query $Q$ typically consist of 2 parts, 
+a subggarh pattern $G_Q$ that is matched against the graph topology, and a conjuctive set of predicates over properties of query edges and query vertices that the matched subgraph must satisfy. Example \ref{ex:cypher-example} shows a typical query written in openCypher.
 
-A user query $Q$ to \gls{gdbms} typically consist of 2 parts, 
-a subggarh pattern $G_Q$ that natches the queried subgraph to identical occurances in the graph
+\vspace{-4pt}
+\begin{example}
+	\label{ex:cypher-example}
+	Consider the following query Q. 
+	{\em 
+		\begin{lstlisting}[numbers=none,  showstringspaces=false,belowskip=0pt ]
+		MATCH (a:PERSON)$-$[e:WORKSAT]$\rightarrow$(b:ORG)
+		WHERE a.age $>$ 22 AND b.established < 2015
+		RETURN *\end{lstlisting}
+	}
+This query returns all the PERSON vertices and their workplaces constrined to the condition that the age property of PERSON vertex has a value that is greater than 22 and established property of ORG vertex is less that 2015. Below, a, b are variable for query vertices and e is the  variables for the edge
+\end{example}
+\vspace{-5pt}
+
+Query execution in GDBMS is typically \emph{volcano-styled}, that is, a subgraph is matched one at a time. 
+
 
 \section{Guidelines}
 \label{sec:guidelines}

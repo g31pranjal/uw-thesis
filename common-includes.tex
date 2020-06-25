@@ -1,0 +1,80 @@
+\usepackage{ifthen}
+\usepackage{amsmath,amssymb,amstext}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[pdftex]{graphicx} 
+\usepackage[pdftex,pagebackref=false]{hyperref} 
+\usepackage[automake,toc,abbreviations]{glossaries-extra} 
+
+% is the document a print version
+\newboolean{PrintVersion}
+\setboolean{PrintVersion}{false} 
+
+% setup hyperref
+\hypersetup{
+	plainpages=false,
+	unicode=false,
+	pdftoolbar=true,
+	pdfmenubar=true,
+	pdffitwindow=false,
+	pdfstartview={FitH},
+	pdftitle={Integrating Column-Oriented Storage and Query Processing Techniques Into Graph Database Management Systems},
+	pdfauthor={Pranjal Gupta},
+	pdfsubject={Computer Science},
+	pdfkeywords={graph database} {database system} {storage} {compression} {adjacency lists} {columnar-storage} {query processing}
+	pdfnewwindow=true,
+	colorlinks=true,
+	linkcolor=blue,
+	citecolor=green,
+	filecolor=magenta,
+	urlcolor=cyan
+}
+
+\ifthenelse{\boolean{PrintVersion}}{   
+	\hypersetup{	
+		citecolor=black,
+		filecolor=black,
+		linkcolor=black}
+}{}
+
+\setlength{\marginparwidth}{0pt} % width of margin notes
+\setlength{\marginparsep}{0pt} % width of space between body text and margin notes
+\setlength{\evensidemargin}{0.125in} 
+\setlength{\oddsidemargin}{0.125in} 
+\setlength{\textwidth}{6.375in} % assuming US letter paper (8.5 in. x 11 in.) and 
+
+\raggedbottom
+
+\setlength{\parskip}{\medskipamount}
+
+\renewcommand{\baselinestretch}{1} 
+
+\let\origdoublepage\cleardoublepage
+\newcommand{\clearemptydoublepage}{%
+  \clearpage{\pagestyle{empty}\origdoublepage}}
+\let\cleardoublepage\clearemptydoublepage
+
+% colors
+\definecolor{cstm-red}{rgb}{0.8, 0.3, 0.4}
+\definecolor{cstm-org}{rgb}{0.8, 0.5, 0.1}
+\definecolor{cstm-grn}{rgb}{0.4, 0.7, 0.3}
+
+\lstset{
+	language=C++,
+	basicstyle=\ttfamily,
+	columns=fullflexible,
+	commentstyle=\color{gray}\ttfamily,
+	keywordstyle=\color{cstm-org}\ttfamily,
+	framesep=3pt,
+	mathescape=true,
+	frame=tb,
+	escapechar=\%,
+	keepspaces=true,
+	belowcaptionskip=1\baselineskip,
+}
+
+\lstset{
+	morekeywords={MATCH, WHERE, RETURN, AND}
+}
+
+\newtheorem{example}{Example}
