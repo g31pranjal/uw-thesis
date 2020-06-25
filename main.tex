@@ -1,37 +1,32 @@
+% For print version, use:
+% \documentclass[letterpaper,12pt,titlepage,openright,twoside,final]{book}
 \documentclass[letterpaper,12pt,titlepage,oneside,final]{book}
- 
-% For PDF, suitable for double-sided printing, change the PrintVersion variable below
-% to "true" and use this \documentclass line instead of the one above:
-%\documentclass[letterpaper,12pt,titlepage,openright,twoside,final]{book}
 
-% Some LaTeX commands I define for my own nomenclature.
-% If you have to, it's better to change nomenclature once here than in a 
-% million places throughout your thesis!
-\newcommand{\package}[1]{\textbf{#1}} % package names in bold text
-\newcommand{\cmmd}[1]{\textbackslash\texttt{#1}} % command name in tt font 
-\newcommand{\href}[1]{#1} % does nothing, but defines the command so the
-    % print-optimized version will ignore \href tags (redefined by hyperref pkg).
-%\newcommand{\texorpdfstring}[2]{#1} % does nothing, but defines the command
-% Anything defined here may be redefined by packages added below...
+% package names in bold text
+\newcommand{\package}[1]{\textbf{#1}} 
+
+% command name in tt font 
+\newcommand{\cmmd}[1]{\textbackslash\texttt{#1}} 
+
+% does nothing, but defines the command so the print-optimized version will ignore \href tags (redefined by hyperref pkg).
+\newcommand{\href}[1]{#1} 
 
 % This package allows if-then-else control structures.
 \usepackage{ifthen}
-\newboolean{PrintVersion}
-\setboolean{PrintVersion}{false} 
+
 % CHANGE THIS VALUE TO "true" as necessary, to improve printed results for hard copies
 % by overriding some options of the hyperref package below.
+\newboolean{PrintVersion}
+\setboolean{PrintVersion}{false} 
 
-%\usepackage{nomencl} % For a nomenclature (optional; available from ctan.org)
-\usepackage{amsmath,amssymb,amstext} % Lots of math symbols and environments
-\usepackage[pdftex]{graphicx} % For including graphics N.B. pdftex graphics driver 
+% Lots of math symbols and environments
+\usepackage{amsmath,amssymb,amstext, amsthm}
 
-% Hyperlinks make it very easy to navigate an electronic document.
-% In addition, this is where you should specify the thesis title
-% and author as they appear in the properties of the PDF document.
-% Use the "hyperref" package 
-% N.B. HYPERREF MUST BE THE LAST PACKAGE LOADED; ADD ADDITIONAL PKGS ABOVE
-\usepackage[pdftex,pagebackref=false]{hyperref} % with basic options
-		% N.B. pagebackref=true provides links back from the References to the body text. This can cause trouble for printing.
+% For including graphics N.B. pdftex graphics driver  
+\usepackage[pdftex]{graphicx} 
+
+\usepackage[pdftex,pagebackref=false]{hyperref} 
+
 \hypersetup{
     plainpages=false,       % needed if Roman numbers in frontpages
     unicode=false,          % non-Latin characters in Acrobat’s bookmarks
@@ -51,14 +46,15 @@
     urlcolor=cyan           % color of external links
 }
 
-\ifthenelse{\boolean{PrintVersion}}{   % for improved print quality, change some hyperref options
-\hypersetup{	% override some previously defined hyperref options
-%    colorlinks,%
-    citecolor=black,%
-    filecolor=black,%
-    linkcolor=black,%
+% for improved print quality, change some hyperref options
+\ifthenelse{\boolean{PrintVersion}}{   
+\hypersetup{	
+	% override some previously defined hyperref options colorlinks
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
     urlcolor=black}
-}{} % end of ifthenelse (no else)
+}{} % no else
 
 \usepackage[automake,toc,abbreviations]{glossaries-extra} % Exception to the rule of hyperref being the last add-on package
 % If glossaries-extra is not in your LaTeX distribution, get it from CTAN (http://ctan.org/pkg/glossaries-extra), 
@@ -77,11 +73,8 @@
 % and \marginparsep so that the space left between the margin notes and page
 % edge is less than 15 mm (0.6 in.)
 \setlength{\marginparsep}{0pt} % width of space between body text and margin notes
-\setlength{\evensidemargin}{0.125in} % Adds 1/8 in. to binding side of all 
-% even-numbered pages when the "twoside" printing option is selected
-\setlength{\oddsidemargin}{0.125in} % Adds 1/8 in. to the left of all pages
-% when "oneside" printing is selected, and to the left of all odd-numbered
-% pages when "twoside" printing is selected
+\setlength{\evensidemargin}{0.125in} 
+\setlength{\oddsidemargin}{0.125in} 
 \setlength{\textwidth}{6.375in} % assuming US letter paper (8.5 in. x 11 in.) and 
 % side margins as above
 \raggedbottom
@@ -107,39 +100,7 @@
   \clearpage{\pagestyle{empty}\origdoublepage}}
 \let\cleardoublepage\clearemptydoublepage
 
-% Define Glossary terms (This is properly done here, in the preamble. Could be \input{} from a file...)
-% Main glossary entries -- definitions of relevant terminology
-\newglossaryentry{computer}
-{
-name=computer,
-description={A programmable machine that receives input data,
-               stores and manipulates the data, and provides
-               formatted output}
-}
-
-% Nomenclature glossary entries -- New definitions, or unusual terminology
-\newglossary*{nomenclature}{Nomenclature}
-\newglossaryentry{dingledorf}
-{
-type=nomenclature,
-name=dingledorf,
-description={A person of supposed average intelligence who makes incredibly brainless misjudgments}
-}
-
-% List of Abbreviations (abbreviations type is built in to the glossaries-extra package)
-\newabbreviation{aaaaz}{AAAAZ}{American Association of Amature Astronomers and Zoologists}
-
-% List of Symbols
-\newglossary*{symbols}{List of Symbols}
-\newglossaryentry{rvec}
-{
-name={$\mathbf{v}$},
-sort={label},
-type=symbols,
-description={Random vector: a location in n-dimensional Cartesian space, where each dimensional component is determined by a random process}
-}
- 
-\makeglossaries
+\input{glossaries}
 
 
 \begin{document}
@@ -163,6 +124,10 @@ description={Random vector: a location in n-dimensional Cartesian space, where e
 \include{Related Work}
 
 \include{Conclusion and Future Work}
+
+
+
+
 
 % B I B L I O G R A P H Y
 % -----------------------

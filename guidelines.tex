@@ -1,31 +1,36 @@
 \chapter{Generel Guidelines for data access patterns in GDBMSs}
 \label{guidelines}
 
-In this chapter we analyze the storage components of a GDBMS and the system's primary operators to get a brief idea of data-access patterns. We then use the inferences of our study to draw a basic set of guidelines that helps us support our design ideas for our data-structures and query-processing techniques in later chapters.
+In this chapter we analyze the storage components of a \gls{gdbms} and the system's primary operators to get a brief idea of data-access patterns. We then use the inferences of our study to draw a basic set of guidelines that helps us support our design ideas for our data-structures and query-processing techniques in later chapters.
 
-We begin by briefly describing the \emph{Property Graph Data Model} in section \ref{sec:property-graph-data-model}, primary storage components of GDBMSs in section \ref{sec:storage-components} and query processing operators in GDBMSs in section \ref{sec:operators}. We finally end the chapter by stating the infered guidelines from our analysis in section \ref{sec:guidelines}.
+We begin by briefly describing the \emph{Property Graph Data Model} in section \ref{sec:property-graph-data-model}, primary storage components of \gls{gdbms}s in section \ref{sec:storage-components} and query processing operators in \gls{gdbms}s in section \ref{sec:operators}. We finally end the chapter by stating the infered guidelines from our analysis in section \ref{sec:guidelines}.
 
 \section{Property Graph Data Model}
 \label{sec:property-graph-data-model}
 
 A property graph consists of entities, called \emph{vertices}, and links that exist between two entities, called \emph{edges}. An edge in a graph \emph{always} has a well defined \emph{source} vertex, \emph{destination} vertex and a \emph{direction}. Each vertex belongs to a particular \emph{type}. Similarly, edges have a \emph{label}. Types and labels are high-level categorizations of vertices and edges respectively in a graph and helps to group together similar sets vertices and edges.
 
-Similar to how entities in a relational table have values to attributes defined in the schema, vertices and edges in a graph can also have (attribute, value) pairs. These are called \emph{properties} of an entity. 
-However unlike attributes in relational tables, the properties on a entity in graph is definite neither in occurance nor in value type throughout the graph. Therefore, vertices and edges can have any number of properties of arbitrary data type.
+Similar to how entities in a relational table have values to attributes defined in the schema, vertices and edges in a graph can also have (attribute, value) pairs. These are called \emph{properties} of an entity. However unlike attributes in relational tables, the properties on a entity in graph is definite neither in occurance nor in value type throughout the graph. Therefore, vertices and edges can have any number of properties of arbitrary data type.
 
 Figure \cite{property} gives an overview of how entities and properties are linked in a Property Graph data model.
 
 \section{Primary storage components in GDBMSs}
 \label{sec:storage-components}
 
-The vertices and edges of a graph forms its topology which is stored in a well-studied data structure called \emph{adjacency lists}. An adjacency list of a vertex is a map to vertex's direct set of edges and \emph{neighbouring} vertices. Typically in a GDBMS, each vertex is asscoiated with 2 adjacency lists - a \emph{forward adjacency list}, containing list of outward edges of that vertex, and a \emph{backward adjacency list} which holds the inward edges. It might be beneficial thinking of single-directional adjacency lists of all vertices as a relational table having 3 attributes, source vertex, destination vertex and edgeID, which is \emph{clustered} on either the source or destination vertex. Given adjacency lists in either directions, we can reach to the reach to the neighbours of a vertex in constant-lookup, which provides the core capability of fast joins to a GDMS. 
+Vertices and edges of a graph together forms its topology which is stored in a well-studied data structure called \emph{adjacency lists}. An adjacency list of a vertex is a map to vertex's direct set of edges and \emph{neighbouring} vertices. Typically in a \gls{gdbms}, each vertex is asscoiated with 2 adjacency lists - a \emph{forward adjacency list}, containing list of outward edges of that vertex, and a \emph{backward adjacency list} which holds the inward edges. It might be beneficial thinking of single-directional adjacency lists of all vertices as a relational table having 3 attributes, source vertex, destination vertex and edgeID, which is \emph{clustered} on either the source or destination vertex. Having adjacency lists in either directions, we can reach to the reach to the list of neighbours of a vertex through forward or backward edges in constant-lookup, which provides the core capability of fast joins to a \gls{gdbms}. 
 
+Typically, a single-directional adjacency list if further clustered into sublists by the edge label of the edges. This enables the operation of joining a vertex to neighbour vertices and edges of a \emph{particular} label a constant-time lookup operation. The intuition behind the subgrouping is that most of the queries on graph have a given label on edges in the query. Similarly, the edges in the adjacency lists are more than often ordered according to some attribute of the edge or vertex, even edge properties or vertex properties.
 
-
-
+Apart from adjacency lists, a \gls{gdbms} also have to store properties that appear on vertices and edges. There are multiple ways the properties of the system can be stored. Of all the easiest way is to store properties in a \emph{key-value store} where each property is indexed by the \emph{hash} of property's attribute name and 8-byte unique ID of the vertex or edge in the system. Properties can also be stored as a \emph{variable-sized} byte-encoded record of each vertex or edge - in a fashion similar to how row records are stored in row-based \gls{rdbms}. A record is essentially variable-sized owing to the fact that the number of properties on an entity is not fixed. Compared to a key-value store, searching for a property in variable-sized records is a daunting task that involves decoding and parsing the entire record till the match is found. Also, addition and deletion of properties is not straight-forward in records. Yet another way of storing properties is in a doubly linked-list that makes at least additions and deletions easy.
 
 \section{Query execution in GDBMSs}
 \label{sec:operators}
+
+	First example
+
+
+A user query $Q$ to \gls{gdbms} typically consist of 2 parts, 
+a subggarh pattern $G_Q$ that natches the queried subgraph to identical occurances in the graph
 
 \section{Guidelines}
 \label{sec:guidelines}
@@ -43,7 +48,7 @@ An adjacency list of a vertex is often further bifurcated into smaller lists whi
 The idea of orderly reads of edges and edge properies straightaway triggers the question if we can read them sequentially from the memory at once and hence benefit from the cache locality available at hand. However, There are two concerns achieving sequential access: 
 \begin{enumerate}
 	\item The edge properties should be organized in the order identical to that of edges in the adjacency list.
-	\item The idea of sequential reads of edges \emph{does not} hold much relevance in the volcano-style processing in GDBMSs which match queries tuple-at-a-time.
+	\item The idea of sequential reads of edges \emph{does not} hold much relevance in the volcano-style processing in \gls{gdbms}s which match queries tuple-at-a-time.
 \end{enumerate}
 
 \subsection{Vertices cannot be ordered}
