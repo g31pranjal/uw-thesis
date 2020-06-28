@@ -1,14 +1,14 @@
 \chapter{Columnar Storage}
 \label{c:columnar-storage}
 
-In this section, we explore the application of columnar data structures for different storage components of the \gls{gdbms}. 
+In this section,   explore the application of columnar data structures for different storage components of the \gls{gdbms}. 
 
 Section \ref{sec:vertex-property-columns} describes the design of columns for vertex properties. In section \ref{sec:edge-property-columns}, we state the limitations of using sub-optimal approaches of storing edge properties in columns. We introduce \emph{edge property lists} for storing edge properties in a way efficient for storage and access. The aforementioned sections also describe a new and more compact identification scheme for vertex and edges in the system. Our new identification scheme replace 8-byte \texttt{vertexID}s and \texttt{edgeIDs}. Section \ref{sec:adjacency-lists} describes adjacency lists in light of columnar storage. We finally end by discussing several storage optimizations that can be done on our new data structures and identification scheme in order to reduce the memory footprint.
 
 \section{Columns for Vertex properties}
 \label{sec:vertex-property-columns}
 
-Columnar data-structures can be directly used for storing vertex properties. By  \ref{ssec:graph-schema} and \ref{ssec:structured-unstructured-properties}, we know that the structured properties of a vertex can be determined by its vertex type. Let $(t_1, t_2, ...)$ be the vertex types in the system. Then, $t_i \rightarrow (p_{i,1},  p_{i,2}, ...)$, where $p_{i, j}$ is a structured vertex property of $t_i$. Further, let $d_{i,j}$ be the data type of property $p_{i,j}$. We define a \emph{vertex property column}, $CV_{i,j}$, for each $p_{i,j}$ in the system, having a fixed data type $d_{i,j}$. Each column stores values of a single property $p_{i,j}$ of all vertices of type $t_i$ at consecutive locations. A collection of columns of a particular vertex type $t_i$ is called the column family, $FCV_i$. Structurally, a column is simply a single-dimensional array of \emph{fixed-width} elements and can be accessed by its positional offset. We store one vertex property per element. Having fixed-width elements greatly simplifies reading a values from the column in constant-time using their positional offsets.
+Columnar data-structures can be directly used for storing vertex properties. By \ref{ssec:graph-schema} and \ref{ssec:structured-unstructured-properties}, we know that the structured properties of a vertex can be determined by its vertex type. Let $(t_1, t_2, ...)$ be the vertex types in the system. Then, $t_i \rightarrow (p_{i,1},  p_{i,2}, ...)$, where $p_{i, j}$ is a structured vertex property of $t_i$. Further, let $d_{i,j}$ be the data type of property $p_{i,j}$. We define a \emph{vertex property column}, $CV_{i,j}$, for each $p_{i,j}$ in the system, having a fixed data type $d_{i,j}$. Each column stores values of a single property $p_{i,j}$ of all vertices of type $t_i$ at consecutive locations. A collection of columns of a particular vertex type $t_i$ is called the column family, $FCV_i$. Structurally, a column is simply a single-dimensional array of \emph{fixed-width} elements and can be accessed by its positional offset. We store one vertex property per element. Having fixed-width elements greatly simplifies reading a values from the column in constant-time using their positional offsets.
 
 We omit explicit ordering in columns. This is a deviation from most of the \gls{gdbms} that order their vertex properties by either \texttt{vertexID} or a property value.  We base our decision on \ref{ssec:vertices-unordered}. In the absence of an explicit order, the property values of a new vertex get \emph{appended} to the respective columns of a family, in a synchronized fashion. This induces a common natural ordering in columns of a family. Therefore, the least we guarantee is that property values of a vertex of type $t_i$ appear at the same location (having same positional offset) in respective columns of family $FCV_i$. Having no order makes insertions to the vertex property columns easy and straightforward.
 
@@ -22,7 +22,7 @@ A property value of vertex $v$ can be read from a columns, using 2 pieces of inf
 The \emph{common} positional offset of a vetex in a column family can be thought of as a \emph{type-level} vertex identifier. The notion can be extended to the global-level vertex indentifier - by also including vertex type information with \emph{type-level} vertex identifier. Hence, a \emph{\textbf{(vertex type, type-level positional offset)}} pair can be treated as a global identifier for a vertex in the system. It replaces 8-byte \texttt{vertexID}s. 
 
 \vspace{-12pt}
-\subparagraph{New vertex identifying scheme.}Even though the new vertex identifier takes 12-bytes (4-bytes vertex type and 8-byte positional offset), we prefer it over 8-byte \texttt{vertexID}s. The new vertex identifier makes accessing vertex properties simple and efficient. However, it takes 4-byte extra per edge to store in the adjacency lists which increases adjacency lists storage by 1.25x. We introduce storge optimizations to counter the surge in adjacency lists size in section \ref{sec:storage-optimizations}.
+\subparagraph{New vertex identifying scheme.}Even though the new vertex identifier takes 12 bytes (4 bytes vertex type and 8 byte positional offset), we prefer it over 8-byte \texttt{vertexID}s. The new vertex identifier makes accessing vertex properties simple and efficient. However, it takes 4-byte extra per edge to store in the adjacency lists which increases adjacency lists storage by 1.25x. We introduce storge optimizations to counter the surge in adjacency lists size in section \ref{sec:storage-optimizations}.
 
 \section{Columns for Edge properties}
 \label{sec:edge-property-columns}
@@ -30,7 +30,7 @@ The \emph{common} positional offset of a vetex in a column family can be thought
 Inferring from \ref{ssec:edges-ordered}, 1) the edges are ordered in the adjacency lists, 2) edges are read by the \texttt{E/I} operators in the order in which they appear in the adjacency lists, and, 3) edge properties are read in the order in which edges are read. The access pattern of edge properties calls for storing edge properties in the order of edges. However, since there are 2 ordering on the edges, we will have to store properties twice for each order. This introduces a \emph{storege-performance} tradeoff. We present two naive solutions that optimizes \emph{storage} and \texttt{performance} respectively:
 
 \vspace{-12pt}
-\subparagraph{Solution 1: (Unordered, No replication) } We use the same design as that for the vertex properties. That is, we have an unordered column for each $q_{i,j}$, where $q_{i,j}$ a structured property of edge label $l_i$. Edges in the system can be identified as \emph{(edge label, label-level positional offset)}. However, such a design would be oblivious to the fact that edges are ordered. Property readers can access the edge properties randomly. However, they cannot benefit from the cache locality which might be there lest the edge properties were ordered by the edges. As a secondary disadvantage, edges will take up 12-bytes for storing in adjacency lists, compared to 8-byte \texttt{edgeID}s.
+\subparagraph{Solution 1: (Unordered, No replication) } We use the same design as that for the vertex properties. That is, we have an unordered column for each $q_{i,j}$, where $q_{i,j}$ a structured property of edge label $l_i$. Edges in the system can be identified as \emph{(edge label, label-level positional offset)}. However, such a design would be oblivious to the fact that edges are ordered. Property readers can access the edge properties randomly. However, they cannot benefit from the cache locality which might be there lest the edge properties were ordered by the edges. As a secondary disadvantage, edges will take up 12 bytes for storing in adjacency lists, compared to 8-byte \texttt{edgeID}s.
 
 \vspace{-12pt}
 \subparagraph{Solution 2: (Ordered, Replication) } We have two columns for each $q_{i,j}$. Properties in 2 columns are ordered by the forward and backward adjacency lists respectively. This solution ensures cache locality benefits in reading properties from consecutive locations either. However, there is replication that doubles the memory footprint of edge property storage. The solution also comes with an advantageous side effect. We can completely get rid of storing 8-byte \texttt{edgeID}s in the adjacency lists. The location of an edge property in the column is simply the positional offset of the edge in the adjacency list. However, updates get tough, with each edge insertion needing 2x insertions in the edge property columns.
@@ -46,11 +46,11 @@ Storing properties in such a manner prevent replication. A property of an edge i
 Note that the property $q_{i,j}$ of edge $e$ having label $l_i$ can now be accessed by knowing 1) $q_{i,j}$, 2) source or destination vertex of $e$ , and 3) list-level positional offset of $e$ in its defining adjacency list. Accessing properties by \texttt{edgeID}s is not preferred owing to the proposition identical to that explained in the previous section. The list-level positional offset, used for accessing edge properties, serves as a \emph{(defining adjacency) list-level} identifier of that edge. The defining adjacency list of $e$ can itself be identified by $e$'s label and source or destination vertex. Hence, we can identify an edge globally by the \emph{\textbf{(edge label, source vertex, destination vertex, (default adjacency) list-level position offset)}} tuple. 
 
 \vspace{-12pt}
-\subparagraph{New edge identifying scheme.} The plain downside of using this new edge identification scheme is that there are a lot of components to store that costs 36 bytes $(=4+12+12+8)$ in total. However, there are trivial optimizations: 
+\subparagraph{New edge identifying scheme.} The plain downside of using this new edge identification scheme is that there are a lot of components to store whose total size is 36 bytes $(=4+12+12+8)$ in total. However, there are trivial points to consider : 
 \begin{itemize}
-	\item We do not need to store the 4 components of the new edge identifier. While extending from an adjacency list, the \emph{extending} vertex identifier and the edge label is already known. They are not stored again on the list. \emph{Neighbouring} vertex identifier is stored from prior, to each edge. Therefore, the only overhead is the list-level positional offset which is equivalent to the overhead from \texttt{edgeID}s.
+	\item We do not need to store all the 4 components of the new edge identifier. While extending from an adjacency list, the \emph{extending} vertex identifier and the edge label is already known. They are not stored again on the list. \emph{Neighbouring} vertex identifier is stored from prior, to each edge. Therefore, the only overhead is the list-level positional offset which is equivalent to the overhead from \texttt{edgeID}s.
 	\item The width of a list-level positional offset is mostly 1 or 2 bytes. This follows the fact that the number of edges in most of the adjacency list is too small (by the power-law). Hence, the size of the positional offset is variable and hence storing them as variable-width brings in a lot of memory space savings.
-	\item List-level positional offsets can be omitted from storage in adjacency lists at many special cases. We look into such optimizations in \ref{sec:storage-optimizations}.
+	\item In many cases, the list-level positional offsets can also be omitted from storing in adjacency lists . We look into these cases in \ref{sec:storage-optimizations}.
 \end{itemize}
 
 \subsection{Page-level Edge Property Columns}
@@ -89,25 +89,34 @@ The value of $n$ is chosen heuristically for the system such that, a page-level 
 \end{enumerate} 
 
 
-For example, let $n$ be 6 and the average number of edges in an adjacency list be 8, then a page-level edge property column with 4-byte values takes 192-bytes. Assuming the L1 cache line size to be 64-bytes, the column will fit in 3 cache lines. This means, at the worst case, there will be 3 cache mises in reading a property of edges from a particular adjacency list.
-
-
-
+For example, let $n$ be 6 and the average number of edges in an adjacency list be 8, then a page-level edge property column with 4-byte values takes 192 bytes. Assuming the L1 cache line size to be 64 bytes, the column will fit in 3 cache lines. This means, at the worst case, there will be 3 cache mises in reading a property of edges from a particular adjacency list.
 
 \section{Storing edges in adjacency lists}
 \label{sec:adjacency-lists}
+
+...
 
 \section{Storage optimizations}
 \label{sec:storage-optimizations}
 
 In this section, we present storage optimizations that can be applied on our data-structures and new identification schemes. These optimizations are critical in reducing the overall memory footprint as well as in query performance. 
 
-\subsection{Vertex property columns for single multiplicity edge labels.}
-
-Single multiplicity edge labels are edge labels that have one of the following cardinalities, 1) 1..1 (one-to-one), 2) 1..n (one-to-many), and 3) n..1 (many-to-one). Such labels guarantee that there will be at most a single edge from the source vertex or to the destination vertex. For instance, let us consider an edge label BIRTHDAY that connects a vertex of type PERSON to the vertex of type DATE. The cardinality of label BIRTHDAY is \emph{many-to-one}. That is, a vertex PERSON is connected to only one vertex of type DATE, while a vertex DATE can have connections to multiple PERSONs through the edge of label BIRTHDAY.
-
-
-
 \subsection{Removing unnecessary edge information.}
+
+At the time we intrduced the new edge identification scheme in \ref{sec:edge-property-columns}, we briefly discussed about the size of storing each edge in the adjacency lists. Out of the 4 components of the new edge identifier, only 2 components \emph{(neighbouring vertex, page-level positional offset)} needs to be stored per edge in the adjacency list. Note that the \emph{neighbouring vertex} itself comprises of 2 components: \emph{(vertex type, type-level positional offset)}. Given that the vertex identifier is 12 bytes and page-level positional offset takes mostly a byte or two, storing an edge in an adjacecny list takes 14 bytes. We can omit storing the few components of the edge in the following cases: 
+
+\begin{itemize}
+	\item Neighbouring vertex's type can be omitted for storage if it can be inferred implicity. We know by \ref{ssec:graph-schema}, that an edge label has a fixed set of source vertex types and destination vertex types. 
+	
+	While extending from an adjacency list, we already know the label, $l_i$, of edges in the list and the direction in which extend is being performed. Using these information, the probable set of neighbouring vertex types, $T_N(l_i)$, can be determined. That is, if extend is in the \emph{forward} direction, $T_N(L_i)$ is the the destination vertex types of $l_i$. Consequently, if extend is for \emph{backward} edges, $T_N(l_i)$ is the source vertex types of $l_i$. 
+\end{itemize}
+
+\subsection{Vertex property columns for single cardinality labels.}
+
+Single cardinality labels are edge labels that have one of the following cardinalities, 1) 1..1 (one-to-one), 2) 1..n (one-to-many), and 3) n..1 (many-to-one). Such labels guarantee that there will be at most a single edge from the source vertex or to the destination vertex. For instance, let us consider an edge label BIRTHDAY that connects a vertex of type PERSON to the vertex of type DATE. Cardinality of BIRTHDAY is \emph{many-to-one}. That is, a vertex PERSON is connected to only one vertex of type DATE, while a vertex DATE can have connections to multiple PERSONs through the edge of label BIRTHDAY.
+
+Single cardinality labels provide the opportunity of optimizing how the edges of such labels are stored. We use the fact that an edge $e$ of a single cardinality label is the \emph{only} element in either the forward adjacency list of $e$'s source vertex or backward adjacency list of $e$'s destination vertex or both. 
+
+...
 
 \subsection{Fixed-length null suppression.}
