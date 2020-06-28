@@ -1,35 +1,35 @@
-\chapter{Generel Guidelines on data access patterns in GDBMSs}
+\chapter{General Guidelines on data access patterns in GDBMSs}
 \label{c:guidelines}
 
-In this section, we analyze the primary components that forms the storage layer of a \gls{gdbms} and the system's primary operators to get a brief knowledge of data access patterns. We then use the inferences of our study to draw a basic set of guidelines that motivate our design ideas for data-structures and query-processing techniques introduced in later chapters.
+In this section, we analyze the primary components that form the storage layer of a \gls{gdbms} and the system's primary operators to get a brief knowledge of data access patterns. We then use the inferences from our study to draw a basic set of guidelines that motivate our design ideas for data-structures and query-processing techniques introduced in later chapters.
 
-We begin by briefly describing the \emph{Property Graph Data Model} in section \ref{sec:property-graph-data-model}.Section \ref{sec:storage-components} describs the primary storage components of \gls{gdbms}s based on the Property Graph model while section \ref{sec:operators} talks about the query processing operators in \gls{gdbms}s. We finally end the chapter by stating the guidelines of our analysis in section \ref{sec:guidelines} .
+Section \ref{sec:property-graph-data-model} briefly describes the \emph{Property Graph Data Model}. Section \ref{sec:storage-components} describes the primary storage components of \gls{gdbms}s based on the Property Graph model while section \ref{sec:operators} talks about the query processing operators in \gls{gdbms}s. We finally end the chapter by stating the guidelines of our analysis in section \ref{sec:guidelines}.
 
 \section{Property Graph Data Model}
 \label{sec:property-graph-data-model}
 
-A property graph consists of entities, called \emph{vertices}, and links that exist between two vertices, called \emph{edges}. An edge in a graph \emph{always} has a well defined \emph{source} vertex, \emph{destination} vertex and a \emph{direction}. Each vertex belongs to a particular \emph{type}. Similarly, edges have a \emph{label}. Types and labels are high-level categorizations of vertices and edges respectively in a graph that groups similar sets vertices and edges together.
+A property graph consists of entities, called \emph{vertices}, and links, called \emph{edges}, that exists between two vertices. An edge \emph{always} has a well-defined \emph{source} vertex, \emph{destination} vertex and a \emph{direction}. Each vertex belongs to a particular \emph{type}. Similarly, each edge has a \emph{label}. Types and labels are high-level categorizations of vertices and edges respectively in a graph that groups similar sets of vertices and edges together.
 
-Similar to how rows in a relational table have values to attributes defined in the schema, vertices and edges in a graph can also have (attribute, value) pairs. These are called \emph{properties} of an entity. However, unlike the Relational data model that associates attributes with a relational table in a well-defined schema, the Property Graph data model does not define any schema. Hence, properties on entities are neither consistent in occurrence nor in their value's data type throughout the graph data. Vertices and edges can, therefore, have any number of properties of arbitrary data type.
+Equivalent to how rows, in a relational table, have a record of values, vertices and edges in a graph can also have (attribute, value) pairs. These are called \emph{properties} of an entity. However, unlike the Relational data model that associates attributes with a relational table in a well-defined schema, the Property Graph data model does not define a schema. Hence, properties on entities are neither consistent in occurrence nor in their value's data type throughout the graph data. Vertices and edges can, therefore, have any number of properties of an arbitrary data type.
 
-Figure \cite{property} gives an pictorial representation of how entities and properties are linked in a Property Graph data model.
+Figure \cite{property} gives a pictorial representation of how entities and properties are linked in a Property Graph data model.
 
 \section{Primary storage components in GDBMSs}
 \label{sec:storage-components}
 
-Vertices and edges of a graph together form its topology which is stored in a well-studied data structure called \emph{adjacency lists}. An adjacency list of a vertex is a map to vertex's direct set of edges and \emph{neighbouring} vertices. Typically in a \gls{gdbms}, each vertex has 2 adjacency lists - a \emph{forward adjacency list} containing outward edges of that vertex, and a \emph{backward adjacency list}, which holds inward edges of the vertex. It might be beneficial thinking of single-directional adjacency lists of all vertices as a relational table having 3 attributes, source vertex, destination vertex and \texttt{edgeID}, which is \emph{clustered} on either the source or destination vertex according to the direction. Having adjacency lists of a vertex in either directions, we can acces the list of neighbour vertices of the vertex in a constant-time lookup operation, which provides the core capability of fast joins to a \gls{gdbms}. 
+Vertices and edges of a graph together form its topology, which is stored in a well-studied data structure called \emph{adjacency lists}. An adjacency list of a vertex is a map to a vertex's direct set of edges and \emph{neighbouring} vertices. Typically in a \gls{gdbms}, each vertex has 2 adjacency lists - a \emph{forward adjacency list} containing outward edges of that vertex, and a \emph{backward adjacency list}, which holds inward edges of the vertex. It might be beneficial to think of single-directional adjacency lists of all vertices as a relational table, having 3 attributes- a source vertex, a destination vertex and an \texttt{edgeID}, which is \emph{clustered} on either the source or destination vertex according to the direction. By having adjacency lists of a vertex $u$ in either direction, we can access the list of outward and inward edges and neighbouring vertices of $u$ directly in a constant-time lookup operation, which provides the core capability of fast joins to a \gls{gdbms}. 
 
-Typically, a single-directional adjacency list if further clustered into sublists by the edge label of the edges. This, additionally, enables joining a vertex to it's neighbour vertices and edges of a \emph{particular} label a constant-time lookup operation. The intuition behind the sub-clustering is that most of the queries on the graph have a label given on edges in the query. Moreever, the edges in a list are often ordered by either the \texttt{edgeID} or by some property of the edge or neighbour vertex \cite{a+indexes}. Since each edge appears only once in a single-directional adjacency list, all the edges are hence strictly ordered in the adjacency lists.
+Typically, a single-directional adjacency list of vertex $u$ is further clustered into sublists by the edge label of the edges. This enables extending a vertex through its edges of a \emph{particular} label, a constant-time lookup operation. The intuition behind the sub-clustering is that most of the queries on the graph have a label on edges in the query. Moreover, the edges in a list are often ordered by either the \texttt{edgeID} or by some property of the edge or neighbouring vertex \cite{a+indexes}. Since each edge appears only once in a single-directional adjacency list, all the edges are strictly ordered in the adjacency lists.
 
-A \gls{gdbms} also store properties that appear on vertices and edges. There are multiple ways the properties of the system can be stored. Of all, the easiest way is to store properties in a \emph{key-value store} where each property is indexed by the \emph{hash} of property's attribute name and 8-byte unique ID of the vertex or edge in the system. Properties can also be stored as a \emph{variable-sized} byte-encoded record of each vertex or edge - in a fashion similar to how row records are stored in row-based \gls{rdbms}. A record is essentially variable-sized because the number of properties on an entity is not fixed. Compared to a key-value store, searching for a property in variable-sized records is a daunting task that involves decoding and parsing the entire record until the matching attribute is found. Also, the addition and deletion of properties are not straight-forward in records. Yet another way of storing properties is in a doubly linked-list, as in Neo4j \cite{neo4j}, that makes additions and deletions easy though searching is still a linear-time operation.
+A \gls{gdbms} also store properties that appear on the vertices and the edges. There are multiple solutions for storing properties. The most straightforward approach is to store properties in a \emph{key-value store} where each property is indexed by the \emph{hash} of the property's attribute name and an 8-byte unique ID of the vertex (\texttt{vertexID}) or edge (\texttt{edgeID}) in the system. Properties can also be stored as a \emph{variable-sized} byte-encoded record of each vertex or edge - in the same manner as row records are stored in row-based \gls{rdbms}. A record is essentially variable-sized because the number of properties on an entity is not fixed. Compared to a key-value store, searching for a property in variable-sized records is a daunting task that involves decoding and parsing the entire record until the matching attribute is found. Also, the addition and deletion of properties are not straight-forward in records. Yet another way of storing properties is in a doubly linked-list, as in Neo4j \cite{neo4j}, that makes additions and deletions easy though searching is still a linear-time operation.
 
 \section{Query execution in GDBMSs}
 \label{sec:operators}
 
 In this section, we review the general execution of queries in a \gls{gdbms} by analyzing major operators used in the system-generated query plans.
 
-We use the Cypher query language \cite{cypher} to describe the queries to a \gls{gdbms}.  A user query $Q$ typically consist of 2 parts, 
-a subggarh pattern $G$ that is matched against the graph topology, and a conjuctive set of predicates $(P_0, P_1 ...)$ over properties of query edges and vertices that the matched subgraph must satisfy. Example \ref{ex:cypher-example} shows a typical query written in cypher.
+We use the Cypher query language \cite{cypher} to describe the queries to a \gls{gdbms}.  A user query $Q$ typically consists of 2 parts, 
+a subgraph pattern $G$ that is matched against the graph topology, and a conjunctive set of predicates $(P_0, P_1 ...)$ over properties of query edges and vertices that the matched subgraph must satisfy. Example \ref{ex:cypher-example} shows a typical query written in Cypher language.
 
 \vspace{-4pt}
 \begin{example}
@@ -41,21 +41,21 @@ a subggarh pattern $G$ that is matched against the graph topology, and a conjuct
 		WHERE a.age $>$ 22 AND b.established < 2015
 		RETURN *\end{lstlisting}
 	}
-This query returns all the PERSON vertices and their workplaces constrined to the condition that the age property of PERSON vertex has a value that is greater than 22 and established property of ORG vertex is less that 2015. Below, a, b are variable for query vertices and e is the  variables for the edge
+	This query returns all the PERSON vertices and their workplaces, constrained to the condition that the \textsc{\char13}age\textsc{\char13} property of PERSON vertex has a value that is greater than 22 and \textsc{\char13}established\textsc{\char13} property of ORG vertex is less than 2015. a and b are query vertex variables while e is a query edge variable.
 \end{example}
 \vspace{-5pt}
 
-Query execution in GDBMS is \emph{volcano-styled}, that is, the query subgraph pattern is matched on the graph and evaluated one match at a time. Following are the major operators used for matching the subgraph pattern and evaluating predicates in a query.
+Query execution in GDBMS is \emph{volcano-styled}, that is, the query subgraph pattern is matched on the graph and evaluated one match at a time. The following are the major operators used for matching the subgraph pattern and evaluating predicates in a query.
 \begin{itemize}
 	
-	\item \textbf{\texttt{SCAN}}: \texttt{Scan} is the first operator int any query plan that matches a single query vertex to all the eligible vertices in the graph and passes their \texttt{vertexID} to the next operator in the query plan. The output of the \texttt{SCAN} operator is a partially matched subgraph to the query's subgraph pattern $G$ which contains a singleton vertex. We call this partially matched subgraph $G_0$.
+	\item \textbf{\texttt{SCAN}}: \texttt{Scan} is the first operator of any query plan that matches a single query vertex to all the eligible vertices in the graph and passes their \texttt{vertexID} to the next operator in the query plan. The output of the \texttt{SCAN} operator is a partially matched subgraph to the query's subgraph pattern $G$ which contains a singleton vertex. We call this partially matched subgraph $G_0$.
 	
-	\item \textbf{\texttt{EXTEND/INTERSECT (E/I)}}: The E/I operator takes as input a partially matched subgraph $G_{k-1}$ from the previous operator, where $k$ is the number of matched query vertices, and matches the next query vertex $v$. If the query vertex to be matched has only a single query edge $e$ to $G_{k-1}$'s already matched vertex $u$, then the \texttt{EXTEND} operator is used to essentially read edges from the adjacency list of $u$ in the appropriate direction. If there are more than one edge, say $(e_1, e_2 ...)$, from $v$ to $G_{k-1}$, such that $(e_1, e_2 ...)$ connects $(u_1, u_2 ...)$ in $G_{k-1}$ to the next vertex to be matched $v$, then \texttt{INTERSECT} operator performs intersection of the appropriate adjacency lists of $(u_1, u_2 ...)$ and matches the common edges and neighbour vertices.
+	\item \textbf{\texttt{EXTEND/INTERSECT (E/I)}}: The E/I operator takes as input a partially matched subgraph $G_{k-1}$ from the previous operator, where $k$ is the number of matched query vertices, and matches the next query vertex $v$. If the query vertex to be matched has only a single query edge $e$ to $G_{k-1}$'s already matched vertex $u$, then the \texttt{EXTEND} operator is used to read edges from the adjacency list of $u$ in the appropriate direction. If there is more than one edge, say $(e_1, e_2 ...)$, from $v$ to $G_{k-1}$, such that $(e_1, e_2 ...)$ connects $(u_1, u_2 ...)$ in $G_{k-1}$ to the next vertex to be matched $v$, then \texttt{INTERSECT} operator performs intersection of the appropriate adjacency lists of $(u_1, u_2 ...)$ and matches the common edges and neighbouring vertices.
 	
 	\item \textbf{\texttt{PROPERTY READER}}: (Vertex/Edge) Property Reader reads the properties of the query vertices and edges which are required for evaluating query predicate $P$, from the underlying properties storage. 
 	
-	\item \textbf{\texttt{EXPRESSION EVALUATOR AND FILTER}}: The expression evaluator evaluates the expressions in the predicate $P$ of the query and filters out the matched subgraphs that do not agree to the contraints specified in the query.
-
+	\item \textbf{\texttt{EXPRESSION EVALUATOR AND FILTER}}: The expression evaluator evaluates the expressions in the predicate $P$ of the query and filters out the matched subgraphs that do not agree to the constraints specified in the query.
+	
 \end{itemize}
 
 Out of all plans generated by the query enumerator for query Example \ref{ex:cypher-example}, one of the plans exist with the follwing sequence of operations, 1) \texttt{SCAN} $a$, 2) \texttt{EXTEND} $a{\rightarrow}b$, 3) \texttt{PROPERTY READER} for $a.age$, 4) \texttt{PROPERTY READER} for $b.established$, and finally, 5) \texttt{EXPRESSION EVALUATOR AND FILTER}. Note that we ignore other operators that are responsible for storing and returning from the query.
@@ -63,17 +63,18 @@ Out of all plans generated by the query enumerator for query Example \ref{ex:cyp
 \section{Guidelines}
 \label{sec:guidelines}
 
-Having looked at the storage components in the \gls{gdbms} and a general process of query execution, we now put forth inferences about general charactersitics of data and its access by the query plan operators from the system storage.
+Having reviewed the storage components in the \gls{gdbms} and a general process of query execution, we now put forth inferences about general characteristics of data and its access by the query plan operators from the system storage.
 
 \subsection{Edges are doubly-indexed.}
 
-We know that there are 2 adjacency lists in the system, one in each direction. Hence, each edge appears twice - in the forward adjacency list of the source vertex and the backword adjacency list of the destination vertex. Each entry in an adjacency lists holds 2 pieces of information: a neighbour \texttt{vertexID} and an \texttt{edgeID}. Though source and destination vertices can be resolved from the edge, we keep the neighbour \texttt{vertexID} as an additional piece of information in the adjacency list to avoid lookup. As evident, \texttt{edgeID}s are duplicated across the two set of adjacency lists. We cannot avoid the duplication by droping an adjacency list in any one direction without a zero-cost penalty to the joining capabilities of the system.
+We know that there are 2 adjacency lists in the system, one in each direction. Hence, each edge appears twice - in the forward adjacency list of the source vertex and the backward adjacency list of the destination vertex. Each entry in an adjacency list holds 2 pieces of information: a neighbouring \texttt{vertexID} and an \texttt{edgeID}. Though source and destination vertices can be resolved from the edge, we keep the neighbouring \texttt{vertexID} as an additional piece of information in the adjacency list to avoid lookup. As evident, \texttt{edgeID}s are duplicated across the two sets of adjacency lists. We cannot avoid the duplication by dropping an adjacency list in any one direction without a zero-cost penalty to the joining capabilities of the system.
 
-\subsection{Edges are read in an order from the adjacency list.}
+\subsection{Edges are read in order from the adjacency list.}
+\label{ssec:edges-ordered}
 
-The set of edges (having relevant edge label) of the vertex to be extended can be accessed in a constant-time operation. These edges are read by the \texttt{E/I} operator in the \emph{order} in which they are stored in the adjacency list. Note that the edge might not be read in consecutive operations, hence we do not call the access \emph{sequential}; nevertheless, ordering is preserved. Furthermore, if the query is required to read some or all of the edge properties of the edges, the properties are also read in the same order in which the edges are read from the adjacency list which itself is the order in which edges are stored.
+The set of edges (having relevant edge label) of the extending vertex extended can be accessed in a constant-time operation. These edges are read by the \texttt{E/I} operator in the same \emph{order} as they are stored in the adjacency list. Note that the edge might not be read in consecutive operations, hence we do not call the access \emph{sequential}; nevertheless, ordering is preserved. Furthermore, if the query is required to read some or all of the edge properties of the edges, the properties are also read in the same order in which the edges are read from the adjacency list which itself is the order in which edges are stored.
 
-The idea of orderly reads straightaway triggers the question if we can read edges and edge properties sequentially from the memory at once and hence benefit from the cache locality available at hand. However, There are two foreseeable concerns achieving sequential access: 
+The idea of orderly reads straightaway triggers the question of whether we can read edges and edge properties sequentially from the memory at once and hence benefit from the cache locality available at hand. However, there are 2 concerns in achieving sequential access: 
 
 \begin{enumerate}
 	
@@ -81,52 +82,55 @@ The idea of orderly reads straightaway triggers the question if we can read edge
 	
 	\item For organizing edge properties in the order identical to that of edges in the adjacency list, each property has to be replicated twice, once for each of the 2 adjacency lists in the system.
 	
-	\item The idea of sequential reads of edges itself \emph{does not} hold much relevance with the volcano-style processing in \gls{gdbms}s which matches the subgraph pattern in the query tuple-at-a-time.
-
+	\item The idea of sequential reads of edges itself \emph{does not} hold much relevance with the volcano-style processing in \gls{gdbms}s, which matches the subgraph pattern in the query tuple-at-a-time.
+	
 \end{enumerate}
 
 \subsection{Vertices cannot be ordered or sequentially read.}
+\label{ssec:vertices-unordered}
 
-Contrary to how the edges and edge properties can be strictly ordered for each of the adjacency lsits, there cannot be any strict ordering on the vertices and its properties. This is owing to the fact that in a single-directional adjacency lists, a neighbour verties can appear \textit{n} number of times, where \textit{n} is the number of edges the neighbour vertex has in the direction opposite to that of the adjacency lists. Moreover concerns that exist with reading edges sequentially, are also valid for sequentially reading vertices.
+Contrary to how the edges and edge properties can be strictly ordered for each of the adjacency lists, there cannot be any strict ordering on the vertices and its properties. This is because, in a single-directional adjacency list, a vertex can appear \textit{n} number of times as the neighbouring vertex of an extending vertex, where \textit{n} is the number of edges the neighbouring vertex has in the direction opposite to that of the adjacency lists. Moreover, concerns that exist with reading edges sequentially, are also valid for sequentially reading vertices.
 
 \subsection{Graph data is not completely schema-agnostic.}
+\label{ssec:graph-schema}
 
-Even though graph data does not to follow a well-defined schema, it is not completely schema-agnostic. We can therefore define a \emph{soft} schema on a graph data that captures much of the structuredness that is present in it. The structuredness in the graph data can be attributed by the following rules:
+Even though graph data does not follow a well-defined schema, it is not completely schema-agnostic. We can, therefore, define a \emph{soft} schema on a graph data that captures much of the structuredness that is present in it. The structuredness in the graph data can be attributed to the following rules:
 \begin{itemize}
 	
-	\item Edge labels determine the source and destination vertex types. For example, in the LDBC social network benchmark, edge label KNOWS only exists between vertices of type PERSON.
-	\item Just like attributes of a relational table, properties on an edge or vertex and its data type can \emph{mostly} be determined by its edge label or vertex type. We say a property can be determined it appears in most of the vertices or edges of a particular vertex type or edge label. For example, a vertex of type PERSON in LDBC SNB has the following properties - firstName, lastName, gender etc. that occurs on all the vertices of type PERSON.
-
+	\item Edge labels have a well-defined set of source and destination vertex type(s). For example, in the LDBC social network benchmark, the edge label KNOWS only exists between vertices of type PERSON.
+	\item Just like attributes of a relational table, properties on an edge or vertex and its data type can \emph{mostly} be determined by its edge label or vertex type. We say a property can be determined if it appears in most of the vertices or edges of a particular vertex type or edge label. For example, a vertex of type PERSON in LDBC SNB has the following properties - firstName, lastName, gender etc., that occurs on all the vertices of type PERSON.
+	
 \end{itemize}
 
 Having even a partial schema on the graph data can be helpful. Structured data provides the opportunity to design more efficient and simpler data structures for better accessing the storage layer of \gls{gdbms}.
 
 \subsection{Structured and unstructured properties.}
+\label{ssec:structured-unstructured-properties}
 
-In the previous section, we assert that properties can mostly be determined by the edge label or the vertex type - but cannot be completely determined. This is because the Property Graph data model allows an entity to have \emph{any} number of properties of \emph{any} data type which makes it theoretically possible for a property to exist on just one out of a million vertices of a type or to have a data type that is not in agreement to properties on other vertices having the same attribute. Since, we assume structuredness in data, we make the following distinction on the nature of a property:
+In the previous section, we assert that properties can mostly be determined by the edge label or the vertex type - but cannot be completely determined. This is because the Property Graph data model allows the entities to have \emph{any} number of properties of \emph{any} data type. This makes it theoretically possible for a property to exist on just one out of a million vertices of a type, or to have a data type that is not in agreement to properties on other vertices having the same attribute. Since we assume structuredness in data, we make the following distinction on the nature of a property:
 
 \begin{itemize}
 	
-	\item \textbf{Structured property}: A property on an entity that can be determined by the vertex type or edge label of that entity. Evidently, the property appears in most of the vertices of a particular vertex type or edges having a particular edge label and have the same data type in all its occurance.
+	\item \textbf{Structured property}: A structured property is a property on an entity that can be determined by the vertex type or edge label of that entity. Evidently, the property appears in most of the vertices of a particular vertex type or edges having a particular edge label and have the same data type in all its occurrence.
 	
-	\item \textbf{Unstructured property}: Not a structured property. Occurs erratically accross vertices and edges or have values of varied data types.
-
+	\item \textbf{Unstructured property}: Not a structured property. An unstructured property occurs erratically across vertices and edges or has values of varied data types.
+	
 \end{itemize}
 
-Note that we base the focus of our work of structured properties. Owing to the erratic nature of unstructured properties, storing then in variable-length records or linked-list as (attribute, value) pairs is a viable solution. Structured property storage can however be optimized to benefit memory footprint as well as access performance.
+Note that we base the focus of our work on structured properties. Owing to the erratic nature of unstructured properties, storing them in variable-length records or linked-list as (attribute, value) pairs is a viable solution. Structured property storage can, however, be optimized to benefit memory footprint as well as access performance.
 
-\subsection{A query do touch all the edge/vertex properties}
+\subsection{A query does not touch all the edge/vertex properties.}
 
-We conducted a small survey on about 100 StackOverflow questions containing openCypher queries to study the general access patterns of the queries that users of \gls{gdbms} use to query the graph data. The survey only focuses on queries of analytical nature and discards transactional ones like insert, delete and update. We summarize the results below: 
+We conducted a small survey on about 100 StackOverflow questions containing openCypher queries to study the general access patterns of the queries that users of \gls{gdbms} use to query the graph data. The survey only focuses on queries of analytical nature and discards transactional ones like insert, delete and update. The results are summarized below: 
 
 \begin{itemize}
 	
-	\item Out of the 100 queries, 68 accessed atleast one of the properties on a vertex or an edge. Of these, 61 accesses vertex properties and 13 accesses edge properties.
+	\item Out of the 100 queries, 68 accessed at least one of the properties on a vertex or an edge. Of these, 61 accesses vertex properties and 13 accesses edge properties.
 	
 	\item Only 11 queries return \emph{all} the properties of a query edge or vertex, while 35 of them return specific properties. By returning specific properties, we mean the query explicitly mentions the property in the return clause of the openCypher query and not \texttt{{\color{cstm-org}RETURN} *}.
 	
-	\item Average number of properties accessed by those queries that explcitly return a set of properties is only 1.6.
-
+	\item Average number of properties accessed by those queries that explicitly return a set of properties is only 1.6.
+	
 \end{itemize}
 
-We therefore conclude that vertex properties are more popularly accessed as compared to edge properties. Moreover, only a few queries actaully access all the properties of all the vertices and edges in the query; most the queries only access 1 or at most 2 properties.
+We, therefore, conclude that vertex properties are more popularly accessed as compared to edge properties. Moreover, only a few queries access all the properties of all the vertices and edges in the query; most of the queries only access 1 or at most 2 properties.
