@@ -10,6 +10,12 @@
 \newboolean{PrintVersion}
 \setboolean{PrintVersion}{false} 
 
+% colors
+\definecolor{cstm-red}{rgb}{0.8, 0.3, 0.4}
+\definecolor{cstm-org}{rgb}{0.8, 0.5, 0.1}
+\definecolor{cstm-grn}{rgb}{0.4, 0.7, 0.3}
+\definecolor{cstm-blu}{rgb}{0.0, 0.1, 0.6}
+
 % setup hyperref
 \hypersetup{
 	plainpages=false,
@@ -24,8 +30,8 @@
 	pdfkeywords={graph database} {database system} {storage} {compression} {adjacency lists} {columnar-storage} {query processing}
 	pdfnewwindow=true,
 	colorlinks=true,
-	linkcolor=blue,
-	citecolor=green,
+	linkcolor=cstm-blu,
+	citecolor=cstm-grn,
 	filecolor=magenta,
 	urlcolor=cyan
 }
@@ -54,10 +60,6 @@
   \clearpage{\pagestyle{empty}\origdoublepage}}
 \let\cleardoublepage\clearemptydoublepage
 
-% colors
-\definecolor{cstm-red}{rgb}{0.8, 0.3, 0.4}
-\definecolor{cstm-org}{rgb}{0.8, 0.5, 0.1}
-\definecolor{cstm-grn}{rgb}{0.4, 0.7, 0.3}
 
 % listing config
 \lstset{
