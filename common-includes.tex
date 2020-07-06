@@ -1,5 +1,5 @@
 \usepackage{ifthen}
-\usepackage{amsmath,amssymb,amstext}
+\usepackage{amsmath,amssymb,amstext,amsthm}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage[pdftex]{graphicx} 
@@ -81,3 +81,19 @@
 }
 
 \newtheorem{example}{Example}
+
+\newtheoremstyle{guidelinestyle}
+{15pt}
+{\topsep}
+{}
+{}
+{\large\bfseries}
+{\newline}
+{\newline}
+{\thmname{#1 }\thmnumber{#2: }\thmnote{#3}}
+\theoremstyle{guidelinestyle}
+
+\newtheorem{guideline}{Guideline}
+
+
+

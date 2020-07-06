@@ -1,24 +1,28 @@
 \chapter{Columnar Storage}
 \label{c:columnar-storage}
 
-In this section,   explore the application of columnar data structures for different storage components of the \gls{gdbms}. 
+In this section, we explore the application of columnar data structures for different storage components of the \gls{gdbms}. 
 
 Section \ref{sec:vertex-property-columns} describes the design of columns for vertex properties. In section \ref{sec:edge-property-columns}, we state the limitations of using sub-optimal approaches to storing edge properties in columns. We introduce \emph{edge property lists} for storing edge properties in a way efficient for storage and access. The above sections also describe a new and more compact identification scheme for vertex and edges in the system. Our new identification scheme replace 8-byte \texttt{vertexID}s and \texttt{edgeIDs}. Section \ref{sec:adjacency-lists} describes adjacency lists in light of columnar storage. We end by discussing several storage optimizations for our new data structures and identification scheme in order the memory footprint without giving up query performance.
 
 \section{Columns for Vertex properties}
 \label{sec:vertex-property-columns}
 
-Columnar data-structures can be directly used for storing vertex properties. By \ref{ssec:graph-schema} and \ref{ssec:structured-unstructured-properties}, we know that a vertex type determines the structured properties of a vertex of that type. Let $(t_1, t_2, ...)$ be the vertex types in the system. Then, $t_i \rightarrow (p_{i,1},  p_{i,2}, ...)$, where $p_{i, j}$ is a structured vertex property of $t_i$. Further, let $d_{i,j}$ be the data type of property $p_{i,j}$. We define a \emph{vertex property column}, $CV_{i,j}$, for each $p_{i,j}$ in the system, having a fixed data type $d_{i,j}$. Each column stores the value of a single property $p_{i,j}$ for all vertices of type $t_i$ at consecutive locations. A collection of columns of a particular vertex type $t_i$ is called the column family, $FCV_i$. By its structure, a column is  a single-dimensional array of \emph{fixed-width} elements and can be accessed by its positional offset. We store one vertex property per element. Having fixed-width elements simplify reading a value from the column in constant-time using their positional offsets.
+Columnar data-structures can be directly used for storing vertex properties. Let $(lv_1, vl_2, ...)$ be the vertex labels in a graph. Then, $lv_i \rightarrow (p_{i,1},  p_{i,2}, ...)$, where $p_{i, j}$ is a structured vertex property of $lv_i$. Further, let $d_{i,j}$ be the data type of property $p_{i,j}$. We define a \emph{vertex property column}, $CV_{i,j}$, for each $p_{i,j}$ in the system, having a fixed data type $d_{i,j}$. Each column stores the value of a single property $p_{i,j}$ for all vertices of type $t_i$ at consecutive locations. The collection of columns of a particular vertex type $lv_i$ is called the column family, $FCV_i$. By its structure, a column is a single-dimensional array of \emph{fixed-width} elements. We store one vertex property per element in a column. The property value of a vertex can be directly read using positional offset in the column.
 
-We omit explicit ordering in columns. This is a deviation from most of the \gls{gdbms} that order their vertex properties by either \texttt{vertexID} or property value.  We base our decision on \ref{ssec:vertices-unordered}. In the absence of an explicit order, the property values of a new vertex get \emph{appended} to the respective columns of a family, in a synchronized fashion. This induces a common natural ordering in columns of a family. Therefore, the least we can guarantee is that property values of a vertex of type $t_i$ appear at the same location (having the same positional offset) in respective columns of family $FCV_i$. Having no order makes insertions to the vertex property columns easy and straightforward.
+Vertex property columns are not ordered, not even by the \texttt{vertexID}. New insertions to a column are performed by simply appending at the end of the column. However, we ensure that all property values of a particular vertex $v$, having label $lv_i$, have the same positional offset in their resepective columns of family $FCV_i$. We call this offset, \emph{vertex label-level postional offset} of the vertex $v$. 
 
-A property value of vertex $v$ can be read from a columns, using 2 pieces of information, 1) property attribute $p_{i,j}$, and 3) positional offset in the column. $p_{i,j}$, stored as 4-byte values in the system, locates the column, while the positional offset locates the property in that column. Here, the property offset serves as the identifier for $v$ in the column and hence, in the column's family. Alternatively, property in a column can also be accessed directly through $v$'s \texttt{vertexID}. However, using \texttt{vertexID}s for identifying locations in a column has 2 major implications:
-\vspace{-6pt}
-\begin{enumerate}
-	\item \textbf{Storage}: \texttt{vertexID} has to be stored with each entry in the column as an identifier. We can optimize it by storing \texttt{vertexID} only once for a column family.
-	\item \textbf{Performance}: Searching for \texttt{vertexID}s in the column to get to the property location is a $\Omega(log(n))$ operation for sorted \texttt{vertexID}s. On the other hand, positional offset accesses a property from the column directly.
-\end{enumerate}
-\vspace{-6pt}
+Hence, the property value of a vertex $v$ can be read using 2 pieces of information, 1) the property attribute $p_{i,j}$, and 3) the common positional offset of $v$ in family $FCV_i$. 
+
+
+
+Given that the vertex
+
+For a \texttt{vertexID} 
+
+Alternatively, property in a column can also be accessed directly through $v$'s \texttt{vertexID}. 
+
+However, using \texttt{vertexID}s for identifying locations in a column has 
 The \emph{common} positional offset of a vetex in a column family can be thought of as a \emph{type-level} vertex identifier. The notion can be extended to the global-level vertex indentifier - by also including vertex type information with \emph{type-level} vertex identifier. Hence, a \emph{\textbf{(vertex type, type-level positional offset)}} pair can be treated as a global identifier for a vertex in the system. It replaces 8-byte \texttt{vertexID}s. 
 
 \vspace{-12pt}
