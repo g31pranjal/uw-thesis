@@ -1,7 +1,7 @@
 \chapter{General Guidelines for Optimizing the Physical Data Layout and Query Processor in GDBMSs}
 \label{c:guidelines}
 
-In this section, we review the primary components that form the storage layers of \gls{gdbms}s, the system's primary operators, and the general data access patterns of these operators when evaluating a query. We then draw a basic set of guidelines that will instruct the design of the physical data layout and query-processing techniques introduced in later chapters.
+In this chapter, we review the primary components that form the storage layers of \gls{gdbms}s, system's primary operators and the general data access patterns of operators when evaluating a query. We then draw a basic set of guidelines that will instruct the design of physical data layout and query-processing techniques introduced in later chapters.
 
 Section \ref{sec:property-graph-data-model} briefly describes the \emph{property graph data model}. Section \ref{sec:storage-components} describes the primary storage components of \gls{gdbms}s that adopt the property graph data model, while Section \ref{sec:operators} reviews the query processing operators in \gls{gdbms}s. We end the chapter by stating our guidelines in Section \ref{sec:guidelines}.
 
@@ -48,6 +48,8 @@ In this section, we review the general execution of queries in a \gls{gdbms} by 
 \vspace{-5pt}
 
 The following are the major operators used for matching the subgraph pattern and evaluating predicates in a query.
+
+
 \begin{itemize}
 	
 	\item \textbf{\texttt{SCAN}}: Scans a set of vertices and edges from the graph topology.
@@ -76,12 +78,12 @@ Figure~\ref{fig:ex-qp} shows one of the query plans that the system will generat
 We next outline a set of guidelines for designing the physical data layout and query processor of a \gls{gdbms}.
 
 \begin{guideline}[Edges are doubly-indexed.]
+\vspace{-5pt}
 Each edge appears in the forward adjacency list of that edge's source vertex and the backward adjacency list of it's destination vertex. This results in a 2x replication factor in storing the topology of a graph in the system. This  replication cannot be avoided by dropping an adjacency list in any one direction without hampering the capability to perform fast neighbour joins, which is one of the core feature of \gls{gdbms}s.
 \end{guideline}
 
 \label{ssec:edges-ordered}
 \begin{guideline}[Edge properties are read in the same order as edges in an adjacency list.]
-	
 During the execution of a query, the \texttt{JOIN} operator will access the edges of a vertex $v$ in the order these edges appear in $v$'s (forward/backward) adjacency lists. Note that the edge or its property might not be read in consecutive operations, hence we do not call the access \emph{sequential}; nevertheless, ordering is preserved. If the query also needs to access the properties of these edges, the access to these edge properties will also be in the same order in which edges were read from the adjacency list. 
 
 This raises the question of whether we can also read edges and edge properties sequentially from the memory at once and hence benefit from the cache locality available at hand. This can be achieved by organizing the edge propreties into lists in an order identical to that of edges in the adjacency list. Since, each edge appears twice, each edge property has to be replicated twice in the system. This might be quite expensive because every property and not just the edge and neighbour vertex need to be replicated. In addition, if the edges in the adjacency lists are sorted, as is done in some of the systems, then the list of ordered edge properties also needs to be kept in sorted order. This makes updates to the system costly, since an insertion of a new edge in between the adjacency list will effect the ordering of all the edge's property lists.
@@ -90,7 +92,7 @@ This raises the question of whether we can also read edges and edge properties s
 
 \begin{guideline}[Vertices cannot be ordered to make access from all neighbour verteices sequential.]
 \label{gdln:vertices-unordered}
-
+\vspace{-5pt}
 Contrary to how the edges and edge properties can be strictly ordered for each of the adjacency lists, there cannot be an ordering on the vertices that localizes the access to neighbour vertices of every vertex and to the properties of these neighbour vertices without prohibitive data replication. In general, if a vertex $v$ has $n$ neighours, then $v$ and its properties need to be replicated $n$ times. Hence, localizing access to neighbour vertices and their properties should not be put in the desiderata of the system's physical data layout design.
 
 \end{guideline}
@@ -99,19 +101,20 @@ Contrary to how the edges and edge properties can be strictly ordered for each o
 \label{gdln:graph-schema}
 Even though the property graph data model is semi-structured, in practise many graph databases stored in \gls{gdbms}s have structure in different components, which \gls{gdbms}s can exploit. One reason this structure exist is that, as observed by prior works \cite{survey}, often the data in \gls{gdbms} comes from structured data in \gls{rdbms}. Infact, several of the \gls{gdbms} providers from the industry and some academics are actively working of defining a schema language for the property graph data model \cite{schema-validation-bonifati, defining-schema-hartig}. We identify three commonly appearing structure in property graph data:
 
+
 \begin{enumerate}
 	
-	\item Often, edge labels in the graph data have a well-defined set of source and destination vertex label(s). This restricts the vertices to  having inward or outward edges of only a definite set of labels. For example, in the LDBC social network benchmark \cite{ldbc}, edges having label KNOWS only exists between vertices of label PERSON.
-	\label{gdln:graph-schema-rule1}
+	\item Often, edge labels in the graph data have a well-defined set of source and destination vertex label(s). This restricts the vertices to  having inward or outward edges of only a definite set of labels. In our example graph, edges having label FOLLOWS only exists between vertices of label PERSON.
 	
 	\item The number of edges of a particular label to which a source or destination vertex can be associated, is a property of the edge label. We call this the \emph{cardinlaity} of an edge label. \emph{One-to-one} cardinality means that there can only be single edge of a particular label from a source vertex and to a destination vertex. \emph{Many-to-one} permits a single edge of a label from a source vertex but multiple edges to a destination vertex. Similar analogy can be applied to \emph{one-to-many} and \emph{many-to-many} cardinality edge labels too.
-	\label{gdln:graph-schema-rule2}
 	
-	\item Similar to the attributes of a relational table, properties on an edge or vertex and the datatypes of these properties can \emph{often} be determined by its edge or vertex label. For example, a vertex of label PERSON in LDBC SNB has the following properties: firstName:\texttt{STRING}, lastName: \texttt{STRING}, gender:\texttt{INT} etc., that occurs on all the vertices of label PERSON. As long as a significant fraction of vertices and edges with a particular label have a common set of properties, a system can exploit this structuredness to store these properties more efficiently. 
+	\item Similar to the attributes of a relational table, properties on an edge or vertex and the datatypes of these properties can \emph{often} be determined by its edge or vertex label. In our example graph, all vertices having label PERSON have 3 properties: name:\texttt{STRING}, age: \texttt{INT} and gender:\texttt{STRING}. As long as a significant fraction of vertices and edges with a particular label have a common set of properties, a system can exploit this structuredness to store these properties more efficiently. 
 	
 \end{enumerate}
 
+
 Such structure in data provides an opportunity to design more efficient and simpler data structures for accessing the storage layer of \gls{gdbms}. However, not all data in graph databases has structure. As a working terminology, we will use the following terms:
+
 
 \begin{itemize}
 	\item \textbf{Structured/unstructured edge:} An edge of a particular label, that follows above-mentioned points \ref{gdln:graph-schema-rule1} and \ref{gdln:graph-schema-rule2}, is called an structured edge. An edge that is not structured, is called an unstructured edge.
@@ -120,12 +123,14 @@ Such structure in data provides an opportunity to design more efficient and simp
 	
 \end{itemize}
 
+
 We focus on optimizing the storage of structured part of the graph data in this thesis. It forms an interesting research topic to optimize a system for unstructured part of graph data. A standard approach is to serialize the key, datatype and value of each property  of our work on structured properties. Owing to the erratic nature of unstructured properties, storing them in variable-length records or linked-list as (attribute, value) pairs is a viable solution. Structured property storage can, however, be optimized to benefit memory footprint as well as access performance.
 
 \end{guideline}
 
 \begin{guideline}[Queries read a small subset of the vertex or edge properties]
 In order to understand the nature of queries user ask on \gls{gdbms}, we conducted a survey of 100 StackOverflow questions containing openCypher queries. We focused on queries of analytical nature and discards transactional ones like insert, delete and update. We observe the following: 
+
 
 \begin{itemize}
 	

@@ -1,4 +1,22 @@
 \chapter{Columnar Compression}
 \label{columnar-compression}
 
-Compression in column-oriented storage has been extensively researched \cite{abadi-col-comp, abadi-sparse-col} in the \gls{rdbms} setting. 
+Compression in column-oriented storage has been extensively researched \cite{abadi-col-comp, abadi-sparse-col, boncz-comp} in the world of \gls{rdbms}. The main idea of column-specific compression being, 1) the ability to compress each data column independently depending on its datatype and features like runs, sorted etc.; 2) high compression rates since adajcent elements in the column are similar; and 3) with some cases, ability to operate directly on compressed data. However, not all columnar compression techniques can be directly applied to the data-structures that we introduced in Chapter~\ref{c:columnar-storage}. In this chapter, we review our basic set of requirements and identify the property of a compression scheme that makes it applicable to our data structure.
+
+We begin by exploring the set of requirements that we expect from a compression algorithm in Section~\ref{sec:col-requirements}. In Section~\ref{sec:col-existing}, we study the applicability of existing columnar compression techniques based on our requirements. Section~\ref{sec:sparse} discusses the case of data sparsity in columns in a \gls{gdbms} and explore the various existing solutions to compress spare columns. Finally, we end the chapter by introducing a new NULL compression algorithm, \emph{prefixSum-based NULL compression}, that addresses the shortcomings of existing solutions to compress sparse columns, in Seciton~\ref{sec:prefixbased}.
+
+\section{Requirements}
+\label{sec:col-requirements}
+
+The design of our vertex and edge property columns as described in sections \ref{sec:vertex-property-columns} and \ref{sec:edge-property-columns}, allows for random access of property values based on the positional offset in a column. Random lookups can be performed intuitively once we decompress the entire column or a part of it. However, this involves the additional cost of decompressing elements that are not required to be read. We can avoid this cost by reading directly from the compressed column, which is possible only if the elements of column are encoded in \emph{fixed-width bits}, instead of variable-width bits.
+
+Owing to the nature of property graph data, one can expect a large number of \texttt{NULL} values even in the columns for structured vertex or edge properties. Other requirement of the compression scheme is to avoid storing NULL values in the columns. Hence, the columnar compression technique should take care of abundant \texttt{NULL} values in a column. 
+
+\section{Existing Techniques for Compressing Columns}
+\label{sec:col-existing}
+
+\section{Sparse Columns}
+\label{sec:sparse}
+
+\section{PrefixSum-based NULL Compression}
+\label{sec:prefixbased}
