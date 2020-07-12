@@ -111,10 +111,10 @@ Figure~\ref{fig:paged} shows the mapping of a vertex-grouped edge property colum
 
 The driving goal is to choose $n$ such that property values of edges in a defining adjacency list are not too sparse for a cache miss to occur with \emph{each} access of a value. Hence, the value of $n$ is heavily dependant on many factors like the cache line size, column element width and the average number of edges in the adjacency lists in the system. We choose the value of n in the range $32, 512$. We show in experiments that our solution is not significantly worse than the vertex-grouped edge property column when performing sequential reads. Comparing the two, we get a minimal overhead of 1.2x on read-intensive workloads. However, with completely unordered edge property column, the overhead over vertex-grouped edge property columns is as high as 4.5x.
 
-\section{Adjacency Lists as a Column store}
+\section{Adjacency Lists as a Column Store}
 \label{sec:adjacency-lists}
 
-...
+
 
 \section{Storage optimizations}
 \label{sec:storage-optimizations}
