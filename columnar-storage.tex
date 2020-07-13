@@ -64,9 +64,9 @@ Recall from Guideline~\ref{ssec:edges-ordered} that edges and edge properties  a
 
 \subparagraph{Solution 2: (Ordered, Replication)}An alternative solution is to directly mimic the storage of the adjacency lists for storing the edge properties. Specifically, let the structured edge properties of an edge label $le_i$ be $q_{i,1}, q_{i,2} ... q_{i,n}$. For each vertex $v$ that has edges with a label $le_i$, and each $q_{i,j}$, we store the edge properties in the \emph{forward adjacency property lists} and \emph{backward adjacency property lists}. However, this design requires replicating each edge property twice. In addition, if the original adjacency lists are sorted, then all the property lists need to be sorted too in the same way, which would make updates slower (though this may be acceptable, given that \gls{gdbms}s are primarily read optimized systems) \textcolor{red}{i think we shouldnt mention this, since this is the limitation of next scheme}. Storing the edge properties replicated in two property lists provides sequential read of properties. A query that is reading the forward (backward) adjacency list of $v$ can read the edge property values of the edges sequentially from the forward (backward) adjacency property list of $v$. Figure~\ref{fig:sol2} shows the forward and backward adjacency property lists for \texttt{since} property of edgel label \texttt{FOLLOW} in our example graph in Figure~\ref{fig:runn}.
 
-\subsection{Single-directional Adjacency Property List Page}
+\subsection{Single-directional Adjacency Property Page}
 
-We presented two solutions for storing edge properties in a columnar data-structure, one optimized for storage and other for performance. We now present the third solution, that is the sweet spot between the two solutions, i.e, we avoid replication of the edge properties without completely sacrificing the benefits from localizing them. In particular, for each edge label $le_i$, we store the properties of edges with label $le_i$ either in the forward or backward adjacency property lists. This way, the edge properties can still be read sequentially when edges are read from any one of the adjacency lists.  Specifically, if a query reads edges having $le_i$ from the forward adjacency list of a vertex and the properties of $le_i$ edges are stored in the forward adjacency property lists, then the edge properties can be sequentially read. While reading edges from the other adjacency lists, the edge properties has to be accessed randomly.
+We presented two solutions for storing edge properties in a columnar data-structure, one optimized for storage and other for performance. We now present the third solution, that is the sweet spot between the two solutions, i.e, we avoid replication of the edge properties without completely sacrificing the benefits from localizing them. In particular, for each edge label $le_i$, we store the properties of edges with label $le_i$ either in the forward or backward adjacency property lists. We call this list, a \emph{single-directional adjcency property list}. This way, the edge properties can still be read sequentially when edges are read from any one of the adjacency lists.  Specifically, if a query reads edges having $le_i$ from the forward adjacency list of a vertex and the properties of $le_i$ edges are stored in the forward adjacency property lists, then the edge properties can be sequentially read. While reading edges from the other adjacency lists, the edge properties has to be accessed randomly.
 
 \begin{figure}
 	\vspace{-25pt}
@@ -90,35 +90,30 @@ To access a property of an edge $e$ having label $le_i$, we need 3 pieces of inf
 \end{figure}
 
 \vspace{-12pt}
-\subparagraph{Limitations.}Though single-directional adjacency property lists is as a good middleground solution, storing edge properties in property lists makes insertions costly if the edges are sorted in the adjacency lists. For example, assume a scenario where a new edge $e$ is inserted at \emph{position 5} in the forward adjacency list $A$ of vertex $v$ having a size \emph{10}. If the edge properties of $e$ are to be stored in the forward adjacency property lists of $v$, each property list will have to be rearranged. This will change the positional offset of the existing edges at location $\geq5$ in $A$. Updating the positional offsets of these edges in their occurance in the other adjacency list requires accessing and traversing $n$ adjacency lists, which is costly.
-
-Apart from costly insertions, maintaining a pointer to a property list per edge property per vertex contributes significantly to the overall memory footprint for storing edges.
+\subparagraph{Limitations.}Though single-directional adjacency property lists is as a good middleground solution, insertions in the list are still costly. In particular, following are the downside of this solution:
+\begin{itemize}
+	\item \textbf{Costly insertions:} Insertions are costly if the edges are sorted in the adjacency lists. For example, assume a scenario where a new edge $e$ is inserted at \emph{position 5} in the forward adjacency list $A$ of vertex $v$ having a size \emph{10}. If the edge properties of $e$ are to be stored in the forward adjacency property lists of $v$, each property list will have to be rearranged. This will change the positional offset of the existing edges at location $\geq5$ in $A$. Updating the positional offsets of these edges in their occurance in the other adjacency list requires accessing and traversing $n$ adjacency lists, which is costly.
+	
+	\item \textbf{High memory overhead:} Apart from costly insertions, a property list per edge property per vertex requires keeping a pointer to each of the list which contributes significantly to the overall memory footprint for storing edge properties.
+\end{itemize}
 
 \vspace{-16pt}
-\subparagraph{Modifications.}To make insertions easy, we omit the proposition of strict ordering in each vertex group of columns. By giving up ordering, queries no longer read the edge property values sequentially while extending from the adjacency list on which the group is ordered. However, we are still able to maintain cache locality by reading the property values from \emph{close-by} locations of a column.
+\subparagraph{Modifications.}Clearly, insertions to the property lists are costly because edges are ordered in the adjacecny lists and the property lists mimic that ordering too. Hence, to make insertions easy, we omit the proposition of keeing property lists ordered. By giving up ordering, queries no longer read the edges' property value sequentially while joining from the adjacency list and reading from the identically-ordered property lists. Instead, we read properties from close-by locations in a \emph{page} and still able to maintain cache locality in reads.
 
-We map $n$ ordered vertex groups from a vertex-grouped edge property column into one unordered page in paged edge property column. This way, a single page holds the property values from $n$ vertex groups. The mapping between vertex groups and page of respective columns is straightforward. Vertex groups of vertices having label-level positional offset $p$ maps to the $p/n$th page in the column. The main benefit of the paged edge property column comes from the fact that it is unordered. Hence, new edge insertions become easy as they get appended into relevant paged edge property column similar to how insertions happen in vertex property columns~\ref{sec:vertex-property-columns}. Property values in a page are still referenced by the group-level positional offset in the new edge identification scheme. However, group-level positional offset in paged edge property column no longer refers to the position of an edge in the ordering adjacency list. Now, the group-level positional offset only refers to the position of properties of an edge in paged edge property columns of a family. 
+We store the property values of $n$ property lists in one unordered page. We call this page, a \emph{single directional adjacency property page}.The mapping from a property list to its corresnponding page is straightforward. Single-directional adjacency property list for vertex $v$ and property $q_{i,j}$ maps to the $i$th page for property $q_{i,j}$, where $i$ is mod $n$ of $v$'s local positional offset. The benefit of using pages comes from it being unordered. This makes new edge insertions easy as now, the new edge properties get appended into their respective pages or recycle the location of an already deleted edge, similar to how insertions happen in vertex property columns. 
 
 \begin{figure}
 	\vspace{-40pt}
 	\hfill\includegraphics[scale=0.78]{img/paged}\hspace*{\fill}
 	\captionsetup{justification=centering}
-	\caption{Mapping the Vertex-grouped edge property column to the Paged edge property column for since property in Figure~\ref{fig:runn}.Here, $n=2$.}
+	\caption{Mapping single-directional adjacency property lists to single-directional adjacency property pages for since property in Figure~\ref{fig:runn}.Here, $n=2$.}
 	\label{fig:paged}
 	\vspace{-5pt}
 \end{figure}
 
-Figure~\ref{fig:paged} shows the mapping of a vertex-grouped edge property column to a paged edge property column for $n=2$. The paged edge property column has two pages that stores the property values from vertex groups $(v1,v2)$ and $(v3,v4)$ respectively.
+Figure~\ref{fig:paged} shows the mapping of a single-directional adjacency property lists to single-direstional adjacency property pages for $n=2$. The paged edge property column has two pages that stores the property values from vertex groups $(v1,v2)$ and $(v3,v4)$ respectively, assuming that the local positional offset of $vi$ is $i$.
 
-The driving goal is to choose $n$ such that property values of edges in a defining adjacency list are not too sparse for a cache miss to occur with \emph{each} access of a value. Hence, the value of $n$ is heavily dependant on many factors like the cache line size, column element width and the average number of edges in the adjacency lists in the system. We choose the value of n in the range $32, 512$. We show in experiments that our solution is not significantly worse than the vertex-grouped edge property column when performing sequential reads. Comparing the two, we get a minimal overhead of 1.2x on read-intensive workloads. However, with completely unordered edge property column, the overhead over vertex-grouped edge property columns is as high as 4.5x.
-
-\section{Adjacency Lists as a Column Store}
-\label{sec:adjacency-lists}
-
-The adjacency lists can be defined as a data-structure that maps a vertex $v$ to the list of $v$'s adjacent edges and neighbour vertices. Given a vertex $v$, t
-
-
-
+The value of $n$ is chosen such that edges' property value are not too far apart from how they were stored in the property lists. This reduces the cache miss to occur with \emph{each} access of a value in a page. Hence, the value of $n$ is dependant on 3 factors: 1) the cache line size; 2) width of an element in the page, and 3) average number of edges in the adjacency lists. Ideally, the value of n is optimum in the range $[32, 512]$. We show in evaluation that our solution is not significantly worse than the single-directional adjacency property lists when performing sequential reads. Comparing the two, we get that our solution is 1.2x slower at the maximum for read-intensive workloads. Running the same workload using unordered edge property columns, accessing the edge properties is 4.5x slower than single-directional adjacency property lists.
 
 \section{Storage optimizations}
 \label{sec:storage-optimizations}
