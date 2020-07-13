@@ -82,8 +82,9 @@ We next outline a set of guidelines and desiderata for designing the physical da
 	Each edge appears in the forward adjacency list of that edge's source vertex and the backward adjacency list of its destination vertex. This results in a 2x replication factor in storing the topology of a graph in the system. This replication cannot be avoided by dropping an adjacency list in any one direction without hampering the capability to perform fast neighbour joins, which is one of the core feature of \gls{gdbms}s. So, we will also doubly index the edges in our design.
 \end{guideline}
 
-\label{ssec:edges-ordered}
+
 \begin{guideline}[Edge properties are read in the same order as edges in an adjacency list.]
+	\label{ssec:edges-ordered}
 	During the execution of a query, the \texttt{JOIN} operator will access the edges of a vertex $v$ in the order these edges appear in $v$'s (forward/backward) adjacency lists. If the query also needs to access the properties of these edges, the access to these edge properties will also be in the same order in which edges were read from the adjacency list. Given that the edges and edge properties are read in order, our first desideratum for the physical data layout and query processor is:
 	
 	\begin{desideratum}
