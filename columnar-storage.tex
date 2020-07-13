@@ -7,20 +7,20 @@ In this chapter, we explore the application of columnar data structures for diff
 \label{sec:vertex-property-columns}
 
 \begin{figure}
-	\vspace{-15pt}
+	\vspace{-25pt}
 	\hfill\includegraphics[scale=0.85]{img/vpcols}\hspace*{\fill}
-	\caption{Vertex property columns for the graph in Fig.~\ref{fig:runn}.}
+	\caption{Vertex property columns for the graph in Figure~\ref{fig:runn}.}
 	\label{fig:vpcols}
 	\vspace{-8pt}
 \end{figure}
 
-Columnar data-structures can be directly used for storing vertex properties. Let $(lv_1, lv_2, ...)$ be the vertex labels in a graph. Let $p_{i,1},  p_{i,2}, ... p_{i, n}$ be the structured vertex properties of $lv_i$, with a datatype $d_{i,j}$. We define a \emph{vertex property column}, $CV_{i,j}$, for each $p_{i,j}$, having a fixed data type $d_{i,j}$. Each column stores the value of a single property $p_{i,j}$ for all vertices having $lv_i$ at consecutive locations. The collection of columns of a particular vertex label $lv_i$ is called the column family, $FCV_i$. All property values of a particular vertex $v$, with label $lv_i$, is located at the same positional offset in their respective columns of family $FCV_i$. We call this positional offset, \emph{(vertex) label-level positional offset} of vertex $v$.
+Columnar data-structures can be directly used for storing vertex properties. Let $(lv_1, lv_2, ...)$ be the vertex labels in a graph. Let $p_{i,1},  p_{i,2}, ... p_{i, n}$ be the structured vertex properties of $lv_i$, with a datatype $d_{i,j}$. We define a \emph{vertex property column} for each $p_{i,j}$, having a fixed data type $d_{i,j}$. Each column stores the value of a single property $p_{i,j}$ for all vertices having $lv_i$ at consecutive locations. We call the collection of columns of all properties of a particular vertex label $lv_i$, the \emph{vertex property column family} of $lv_i$. All property values of a particular vertex $v$, with label $lv_i$, is located at the same positional offset in their respective columns in column family of  $lv_i$. We call this positional offset, \emph{(vertex) label-level positional offset} of vertex $v$.
 
 % reading a property.
 
 Ideally, the property value of a vertex should directly be read using the ID of the vertex as the positional offset in the column. However, \gls{gdbms} typically gives globally unique 8-byte consecutive IDs to all the vertices in the system, irrespective of their labels. That means ID 0 can be given to a vertex with label PRESION and 1 to the vertex with label ORG. We cannot use this ID scheme as the positional offset for the above design. One possible solution is to maintain a map for each label, from the vertex's \enquote{global} ID to its \enquote{local}, i.e, a label-level positional offset of a vertex in the column. This, however, requires extra storage for maintaining the map and one level of indirection when accessing the vertex properties. Instead, we identify a vertex by a \emph{\textbf{(vertex label, label-level positional offset)}} tuple in the system in place of global vertex ID. This allows direct access to the properties by using the positional offset which now is part of the vertex ID. However, using this new vertex ID scheme requires materializing 2 pieces of information in the adjacency lists - a vertex label and a local positional offset, compared to only global vertex ID by the earlier scheme. This increases the memory overhead as the \enquote{local} positional offsets and the global vertex ID are of the same size. However, as we will show in section \ref{sec:storage-optimizations}, we can often avoid storing the vertex labels with vertex IDs and even save space by using fewer bytes for local positional offsets than the bytes needed by the global vertex IDs.
 
-For reference, figure~\ref{fig:vpcols} shows the set of vertex property columns for our running example graph in Figure~\ref{fig:runn}. It has 2 column families, one for each vertex label in the system, with a column for each structured property of the label. The global vertex IDs on the right of a column family indicates the positional offset at which the properties of a particular vertex are located in the columns of a family. For instance, the properties of vertex $v2$ appear at offset $1$ in columns of PERSON's family. By the new vertex ID scheme, $v2$ is identified as \texttt{PRESON:1}. 
+For reference, figure~\ref{fig:vpcols} shows set of vertex property columns for our example graph in figure~\ref{fig:runn}. It has 2 column families, one for each vertex label, with a column for each structured property of the label. The global vertex IDs on the right of a column family indicates the positional offset at which the properties of a particular vertex are located in the columns of a family. For instance, the properties of vertex $v2$ appear at offset $1$ in columns of PERSON's family. By the new vertex ID scheme, $v2$ is identified as \texttt{PRESON:1}. 
 
 % updates.
 
@@ -32,42 +32,54 @@ The design of the vertex property columns allows for easy insertions and deletio
 Recall from Guideline~\ref{ssec:edges-ordered} that edges and edge properties  are read by the \texttt{JOIN} operators in the order they appear in the adjacency lists. We know that the \gls{gdbms} already stores the edges, i.e the edge ID and the neighbour vertex ID, consecutively in the adjacecy lists. Ideally, edge properties should also be stored in the same order. However, as we discuss in this section, this is not possible without replication. We begin by presesnting two columns storage designs for storing edge properties which can be seen as opposite ends of a design spectrum, optimizing the system for \emph{storage} and \emph{performance} respectively:
 
 \begin{figure}
-	\vspace{-25pt}
+	\vspace{-30pt}
 	\hspace*{-20pt}
 	\begin{subfigure}{0.45\textwidth}
-		\vspace{8pt}
+		\vspace{20pt}
 		\centering
-		\includegraphics[scale=0.8]{img/sol1}
+		\includegraphics[scale=0.75]{img/sol1}
 		\captionsetup{justification=centering}
+		\vspace{10pt}
 		\caption{Sol 1: (Unordered, No Replication)}
 		\label{fig:sol1}
 	\end{subfigure}
 	\begin{subfigure}{0.55\textwidth}
 		\centering
-		\includegraphics[scale=0.8]{img/sol2}
+		\includegraphics[scale=0.75]{img/sol2}
 		\captionsetup{justification=centering}
 		\caption{Sol 2: (Ordered, Replication)}
 		\label{fig:sol2}
 	\end{subfigure}
 	\captionsetup{justification=centering}
-	\caption{Edge property columns in Solution 1 and 2 for \texttt{since} property in Fig.~\ref{fig:runn}.}
+	\vspace{5pt}
+	\caption{Edge property columns in Solution 1 and 2 for \texttt{since} property in Figure~\ref{fig:runn}.}
+	\vspace{-10pt}
 	\label{fig:sol1and2}
-	\vspace{-8pt}
 \end{figure}
 
 \vspace{-12pt}
-\subparagraph{Solution 1: (Unordered, No replication)}One possibility is to use the columnar storage design similar to that for storing the vertex properties. That is, we have one edge property column for each $q_{i,j}$, where $q_{i,j}$ is a structured property of edge label $l_i$. Edges in the system with this solution can be identified as \emph{(edge label, label-level positional offset)}. However, such a design would not localize the properties of the edge according to their appearance in the adjacency lists, so cannot provide sequential reads when reading the edge properties. Figure~\ref{fig:sol1} shows how this particular design would look like. The figure shows a column with property values for property \texttt{since} for FOLLOWS edges. The property values are not ordered. For our running example, the forward adjacency list of \texttt{v4} contains edges \texttt{e5}, \texttt{e2} and \texttt{e3}, whose \texttt{since} property values (at positional offsets 3, 4 and 1) are not stored together in the edge property column. 
+\subparagraph{Solution 1: (Unordered, No replication)}One possibility is to use the columnar storage design similar to that for storing the vertex properties. That is, we have one edge property column for each $q_{i,j}$, where $q_{i,j}$ is a structured property of edge label $l_i$. Edges in the system with this solution can be identified as \emph{(edge label, label-level positional offset)}. However, such a design would not localize the properties of the edge according to their appearance in the adjacency lists, so cannot provide sequential reads when reading the edge properties. Figure~\ref{fig:sol1} shows how this particular design would look like. The figure shows a column with property values for property \texttt{since} for FOLLOWS edges. The property values are not ordered. For our example, the forward adjacency list of \texttt{v4} contains edges \texttt{e5}, \texttt{e2} and \texttt{e3}, whose \texttt{since} property values (at positional offsets 3, 4 and 1) are not stored together in the edge property column. 
 
 \vspace{-12pt}
 
-\subparagraph{Solution 2: (Ordered, Replication)}An alternative solution is to directly mimic the storage of the adjacency lists for storing the edge properties. Specifically, let the structured edge properties of an edge label $le_i$ be $q_{i,1}, q_{i,2} ... q_{i,n}$. For each vertex $v$ that has edges with a label $le_i$ and each $q_{i,j}$, we store the edge properties in the forward adjacency lists and the backward adjacency lists. However, this design requires replicating each edge twice. In addition, if the original adjacency lists are sorted, then all the property lists need to be sorted too in the same way, which would make updates slower (though this may be acceptable, given that \gls{gdbms}s are primarily read optimized systems). Storing the edge properties replicated in two property lists provides sequential read of properties always. A query that is reading the forward (backward) adjacency list of $v$ can read the edge property values of the edges sequentially from the forward (backward) adjacency property list of $v$. Figure~\ref{fig:sol2} shows the forward and backward adjacency property lists for \texttt{since} property of edgel label \texttt{FOLLOW} in our running example graph in Figure~\ref{fig:runn}.
+\subparagraph{Solution 2: (Ordered, Replication)}An alternative solution is to directly mimic the storage of the adjacency lists for storing the edge properties. Specifically, let the structured edge properties of an edge label $le_i$ be $q_{i,1}, q_{i,2} ... q_{i,n}$. For each vertex $v$ that has edges with a label $le_i$, and each $q_{i,j}$, we store the edge properties in the \emph{forward adjacency property lists} and \emph{backward adjacency property lists}. However, this design requires replicating each edge property twice. In addition, if the original adjacency lists are sorted, then all the property lists need to be sorted too in the same way, which would make updates slower (though this may be acceptable, given that \gls{gdbms}s are primarily read optimized systems) \textcolor{red}{i think we shouldnt mention this, since this is the limitation of next scheme}. Storing the edge properties replicated in two property lists provides sequential read of properties. A query that is reading the forward (backward) adjacency list of $v$ can read the edge property values of the edges sequentially from the forward (backward) adjacency property list of $v$. Figure~\ref{fig:sol2} shows the forward and backward adjacency property lists for \texttt{since} property of edgel label \texttt{FOLLOW} in our example graph in Figure~\ref{fig:runn}.
 
-\subsection{Vertex-grouped Edge Property Columns}
+\subsection{Single-directional Adjacency Property List Page}
 
-We presented two solutions for storing edge properties in a columnar data-structure, one optimizing for storage and other for performance. We now present the third solution, that is the sweet spot between our existing two solutions. For
+We presented two solutions for storing edge properties in a columnar data-structure, one optimized for storage and other for performance. We now present the third solution, that is the sweet spot between the two solutions, i.e, we avoid replication of the edge properties without completely sacrificing the benefits from localizing them. In particular, for each edge label $le_i$, we store the properties of edges with label $le_i$ either in the forward or backward adjacency property lists. This way, the edge properties can still be read sequentially when edges are read from any one of the adjacency lists.  Specifically, if a query reads edges having $le_i$ from the forward adjacency list of a vertex and the properties of $le_i$ edges are stored in the forward adjacency property lists, then the edge properties can be sequentially read. While reading edges from the other adjacency lists, the edge properties has to be accessed randomly.
 
+\begin{figure}
+	\vspace{-25pt}
+	\hfill\includegraphics[scale=0.78]{img/single-dir-prop-list}\hspace*{\fill}
+	\captionsetup{justification=centering}
+	\caption{Single-directional Adjacency Property Lists}
+	\label{fig:single-dir-prop-list}
+	\vspace{0pt}
+\end{figure}
 
-We define an \emph{ordered} edge property column, $CE_{i,j}$, for each edge property $q_{i,j}$. The collection of columns having the label $le_{i,j}$ forms a family $FCE_i$ and are either forward or backward adjacency list-ordered. If a family $FCE_i$ is forward adjacency list-ordered, it means that all property values of an edge $e$, having label $le_i$, are grouped by the edge's source vertex and ordered by source vertex's forward adjacency list in columns of $FCE_i$; and similarly if a family for backward adjacency list-ordered column. The property values grouped by source or destination vertex is called a \emph{vertex group} in a column. Property values of $e$ are further located at the same positional offset across all columns of $FCE_i$. Reading from an edge property column that is forward adjacency list-ordered is sequential if the edges are read from a vertex's forward adjacency list. However, if the edges are read from the backward adjacency list, the property values have to be accessed randomly out-of-order.
+Figure~\ref{fig:single-dir-prop-list} shows the Single-directional Adjacency Property Lists for storing the properties of the example graph in Figure~\ref{fig:runn}. There are 3 families, one for each edge label. Edge properties in the family of FOLLOW and WORKAT labels are stored in the forward adjacency property lists, while in STUDYAT the properties are in the backward adjacency property lists.
+
+To access a property of an edge $e$ having label $le_i$, we need 3 pieces of information; 1) $q_{i,j}$; 2) source vertex if the $q_{i,j}$'s values are stored in the forward adjacency property lists, else destination vertex; and 3) the (list-level) postional offset of $e$ in that property list. For instance, in figure~\ref{fig:single-dir-prop-list}, \texttt{since} property of $e2$ can be accessed knowing $v4$ (source vertex of $e2$) and offest of $e2$ in $v4$'s forward adjecency property list, i.e 1. As was the case with global vertex ID, global edge IDs also cannot be used as the positional offset in the list to access a property. Hence, we adopt a new edge identification scheme that identifies the edge in the system by a tuple having 4 components: \textbf{\emph{(edge label, source vertex, destination vertex, list-level positional offset)}}. In our new scheme, the $e2$'s ID will be given as \texttt{FOLLOWS:v4:v1:2}, where $v4$ and $v1$ are the source and destination edges of $e2$. These edge IDs provides us with compact storage too. Most of the components need not to be stored in the adjacency lists and the edge ID can be constructed during query exection by reading as less as only the neighbour vertex's local positionl offset in the property list. 
 
 \begin{figure}
 	\vspace{-25pt}
@@ -75,25 +87,15 @@ We define an \emph{ordered} edge property column, $CE_{i,j}$, for each edge prop
 	\captionsetup{justification=centering}
 	\caption{Components of the new Edge identification scheme.}
 	\label{fig:edge-scheme}
-	\vspace{5pt}
 \end{figure}
 
-The need for randomly accessing property values means that edge identifier cannot be omitted from storing in adjacency lists. A property of edge $e$ having label $le_i$ can be accessed in a vertex-grouped edge property column by knowing 1) $q_{i,j}$; 2) the vertex on which property values in the column are grouped i.e, either source or destination vertex of $e$), and 3) group-level positional offset of $e$. Owing to issues similar to those faced with using \texttt{vertexID} for fetching vertex properties, we adopt a new scheme for identifying edges in the system. The new scheme identifies an edge by a set of following components: \textbf{\emph{(edge label, source vertex, destination vertex, group-level positional offset)}}. This scheme gives tremendous opportunity for reducing the memory footprint of storing edges in the adjacency lists, apart from easily accessing edge property columns. We describe the storage of edges using the new scheme in Section~\ref{sec:storage-optimizations}.
-
-\subsection{Paged Edge Property Columns}
-\label{sec:paged-edge-property-columns}
-
-Vertex-grouped edge property columns is a good solution for storing edge properties but are practically infeasible to maintain in the system. We discuss the limitations of vertex-grouped edge property columns and then propose simple modifications to address those limitations. We call the modified solution, paged edge property group, that removes ordering and groups the property values in a column at a memory page-level instead of vertex-level.
-
 \vspace{-12pt}
-\subparagraph{Limitations of Vertex-grouped Edge Property Columns.}
-Storing edge properties in vertex-grouped edge property lists are not update friendly owing to the existence of strict ordering in each group of all the columns. For example, assume a scenario where a new edge is has to be inserted at \emph{position 5} in a forward adjacency list $A$ of vertex $v$ having a size \emph{10}. The vertex groups of $v$ that are ordered by $A$ will have to undergo shifting to make space for the properties of new edge at position 5. This will modify the list-level positional offsets of edges appearing at positions $\geq 5$ in $A$. Changing the positional offsets of modified edges is costly since it requires $n$ traversals of adjacency lists, where $n$ is the number of modified edges. Hence, each edge insertion will cause physical changes to the columns as well as multiple adjacency lists.
+\subparagraph{Limitations.}Though single-directional adjacency property lists is as a good middleground solution, storing edge properties in property lists makes insertions costly if the edges are sorted in the adjacency lists. For example, assume a scenario where a new edge $e$ is inserted at \emph{position 5} in the forward adjacency list $A$ of vertex $v$ having a size \emph{10}. If the edge properties of $e$ are to be stored in the forward adjacency property lists of $v$, each property list will have to be rearranged. This will change the positional offset of the existing edges at location $\geq5$ in $A$. Updating the positional offsets of these edges in their occurance in the other adjacency list requires accessing and traversing $n$ adjacency lists, which is costly.
 
-Apart from costly insertions, maintaining pointers to each of the group in all the columns introduces significant memory overhead. 
+Apart from costly insertions, maintaining a pointer to a property list per edge property per vertex contributes significantly to the overall memory footprint for storing edges.
 
 \vspace{-16pt}
-\subparagraph{Modifications.}
-To make insertions easy, we omit the proposition of strict ordering in each vertex group of columns. By giving up ordering, queries no longer read the edge property values sequentially while extending from the adjacency list on which the group is ordered. However, we are still able to maintain cache locality by reading the property values from \emph{close-by} locations of a column.
+\subparagraph{Modifications.}To make insertions easy, we omit the proposition of strict ordering in each vertex group of columns. By giving up ordering, queries no longer read the edge property values sequentially while extending from the adjacency list on which the group is ordered. However, we are still able to maintain cache locality by reading the property values from \emph{close-by} locations of a column.
 
 We map $n$ ordered vertex groups from a vertex-grouped edge property column into one unordered page in paged edge property column. This way, a single page holds the property values from $n$ vertex groups. The mapping between vertex groups and page of respective columns is straightforward. Vertex groups of vertices having label-level positional offset $p$ maps to the $p/n$th page in the column. The main benefit of the paged edge property column comes from the fact that it is unordered. Hence, new edge insertions become easy as they get appended into relevant paged edge property column similar to how insertions happen in vertex property columns~\ref{sec:vertex-property-columns}. Property values in a page are still referenced by the group-level positional offset in the new edge identification scheme. However, group-level positional offset in paged edge property column no longer refers to the position of an edge in the ordering adjacency list. Now, the group-level positional offset only refers to the position of properties of an edge in paged edge property columns of a family. 
 
@@ -101,7 +103,7 @@ We map $n$ ordered vertex groups from a vertex-grouped edge property column into
 	\vspace{-40pt}
 	\hfill\includegraphics[scale=0.78]{img/paged}\hspace*{\fill}
 	\captionsetup{justification=centering}
-	\caption{Mapping the Vertex-grouped edge property column to the Paged edge property column for since property in Fig.~\ref{fig:runn}.Here, $n=2$.}
+	\caption{Mapping the Vertex-grouped edge property column to the Paged edge property column for since property in Figure~\ref{fig:runn}.Here, $n=2$.}
 	\label{fig:paged}
 	\vspace{-5pt}
 \end{figure}
