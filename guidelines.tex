@@ -18,12 +18,12 @@ Section \ref{sec:property-graph-data-model} briefly describes the \emph{property
 
 Figure~\ref{fig:runn} shows a graph data, that serves as our running example, in the property graph data model. A property graph consists of \emph{vertices} that represent entities and directed \emph{edges} between vertices that represent relationships between entities. Each vertex and edge has a particular \emph{label}, describing the high-level categories of vertices and edges. For example, in Figure~\ref{fig:runn}, vertices have labels: \texttt{PERSON} and \texttt{ORG}, while edges have labels: \texttt{FOLLOWS}, \texttt{WORKAT} and \texttt{STUDYAT}.
 
-Similar to columns in relational tables, vertices and edges can have (key, value) \emph{properties}. Although the properties of vertices and edges do not need to adhere to a strict \emph{schema}, in practice many of these properties are often highly structured, i.e., a similar set of properties will exist on vertices and edges of the same label.
+Similar to columns in relational tables, vertices and edges can have (key, value) \emph{properties}. Although the properties of vertices and edges do not need to adhere to a strict \emph{schema}, in practice many of these properties are often highly structured in the graph data, i.e., a similar set of properties will exist on all the vertices and edges of the same vertex and edge label respectively.
 
 \section{Primary Storage Components in GDBMSs}
 \label{sec:storage-components}
 
-In every \gls{gdbms} we are aware of, the edges of a graph are stored in data structure called \emph{adjacency lists}~\cite{bonifati-adj-lists}. An adjacency list of a vertex $v$ is a list of \emph{adjacent} edges and \emph{neighbouring} vertices of $v$. In a \gls{gdbms}, each vertex has 2 adjacency lists - a \emph{forward adjacency list} containing all outward edges of that vertex, and a \emph{backward adjacency list} that holds all inward edges of the vertex. One can think of edges in the graph as a relational table, having 3 attributes, a source vertex, a destination vertex and an 8-byte edge ID. The adjacency lists can then be thought of as an \emph{index} on this relational table that is \emph{clustered} by either the source or destination vertex. In practice, often this index has a depth of 1 or 2, so given the ID of a vertex $v$, a system can access $v$'s list of edges in a small number of lookups. By having adjacency lists of a vertex in either direction, the system can access the list of outward and inward edges and neighbouring vertices of $u$ in a constant-time lookup operation, which provides the core capability of fast joins on vertices to a \gls{gdbms}. 
+In every \gls{gdbms} we are aware of, the edges of a graph are stored in data structure called \emph{adjacency lists}~\cite{bonifati-adj-lists}. An adjacency list of a vertex $v$ is a list of \emph{adjacent} edges and \emph{neighbouring} vertices of $v$. In a \gls{gdbms}, each vertex has 2 adjacency lists - a \emph{forward adjacency list} containing all outward edges of that vertex, and a \emph{backward adjacency list} that holds all inward edges of the vertex. One can think of edges in the graph as a relational table, having 3 attributes, a source vertex, a destination vertex and an 8-byte edge ID. The adjacency lists can then be thought of as an \emph{index} on this relational table that is \emph{clustered} by either the source or destination vertex. In practice, often this index has a depth of 1 or 2, so given the ID of a vertex $v$, a system can access $v$'s list of edges in a small number of lookups. By having adjacency lists of a vertex in either direction, the system can access the list of outward and inward edges as well as the neighbouring vertices of $u$ in a constant-time lookup operation, which provides the core capability of fast joins on vertices to a \gls{gdbms}. 
 
 Typically, a single-directional adjacency list of vertex $u$ is further clustered into sublists by the edge label of the edges. This enables extending a vertex through its edges with a \emph{particular} label in constant time. The rationale behind the sub-clustering is that many queries by applications have specific labels on query edges. Some systems further order the edge in the adjacency lists either by a property of adjacent edge or neighbour vertex or simply by neighbour vertex's ID. Sorting enables the system to access parts of lists in time logarithmic in the size of the adjacency list.
 
@@ -35,7 +35,7 @@ A \gls{gdbms} also stores properties that appear on the vertices and the edges. 
 In this section, we review the general execution of queries in a \gls{gdbms} by analyzing major operators used in the query plans. Though systems differ in their architectures and implementation of operators that they support for executing queries, there is similarity in their data access patterns. We use the Cypher query language \cite{cypher} to describe the queries we use in our examples. A user query typically consists of 3 parts, 1) a \texttt{MATCH} clause describes a subgraph query pattern $Q(V_Q, E_Q)$, where $V_Q$ and $E_Q$ are the query vertex and edge variables, that the system will match on the input graph; 2) \texttt{WHERE} clause contains a predicate $\rho$ over properties of the edges and vertices that the matched subgraph must satisfy; and 3) a \texttt{RETURN} statement that returns a projection of the variables in the match query or performs a group-by and aggregate information. The \texttt{MATCH}, \texttt{WHERE} and \texttt{RETURN} clauses of a cypher query effectively corresponds to the \texttt{FROM}, \texttt{WHERE} and \texttt{SELECT} clauses of SQL. Example \ref{ex:cypher-example} shows a typical query written in Cypher language, to query the example graph in figure~\ref{fig:runn}.
 
 \begin{example}
-	\vspace{19pt}
+	\vspace{5pt}
 	\label{ex:cypher-example}
 	Consider the following query. 
 	{\em 
@@ -119,8 +119,8 @@ We next outline a set of guidelines and desiderata for designing the physical da
 		Exploit the above three commonly appearing structure in the graph data to, 1) compress the data to save space, and 2) provide faster access to the data.
 	\end{desideratum}
 	
+	\vspace{-10pt}
 	However, not all data in graph databases have structure. As a working terminology, we will use the following terms:
-	
 	
 	\begin{itemize}
 		\item \textbf{Structured/unstructured edge:} An edge of a particular label, that follows above-mentioned points \ref{gdln:graph-schema-rule1} and \ref{gdln:graph-schema-rule2}, is called an structured edge. An edge that is not structured, is called an unstructured edge.
