@@ -95,7 +95,6 @@ We next outline a set of guidelines and desiderata for designing the physical da
 
 \begin{guideline}[Vertices cannot be ordered to make access from all neighbour vertices sequential.]
 	\label{gdln:vertices-unordered}
-	\vspace{-5pt}
 	Contrary to how the edges and edge properties can be strictly ordered for each of the adjacency lists, in general, there cannot be ordering on the vertices that completely localizes the access to neighbour vertices of every vertex and the properties of these neighbour vertices without prohibitive data replication. In general, if a vertex $v$ has $n$ neighbours, then $v$ and its properties need to be replicated $n$ times. Hence, localizing access to neighbour vertices and their properties should not be put in the desiderata of the system's physical data layout design.
 	
 \end{guideline}
@@ -103,7 +102,6 @@ We next outline a set of guidelines and desiderata for designing the physical da
 \begin{guideline}[Graph data often has partial structure.]
 	\label{gdln:graph-schema}
 	Even though the property graph data model is semi-structured, in practice many graph databases stored in \gls{gdbms}s have a structure in different components, which \gls{gdbms}s can exploit. One reason this structure exists is that, as observed by prior works \cite{survey}, often the data in \gls{gdbms} comes from structured data in \gls{rdbms}. In fact, several of the \gls{gdbms}s from industry and some academics are actively working on defining a schema language for the property graph data model \cite{schema-validation-bonifati, defining-schema-hartig}. We identify three commonly appearing structure in property graph data:
-	
 	
 	\begin{enumerate}
 		

@@ -94,7 +94,7 @@ To access a property of an edge $e$ having label $le_i$, we need 3 pieces of inf
 \begin{itemize}
 	\item \textbf{Costly insertions:} Insertions are costly if the edges are sorted in the adjacency lists. For example, assume a scenario where a new edge $e$ is inserted at \emph{position 5} in the forward adjacency list $A$ of vertex $v$ having a size \emph{10}. If the edge properties of $e$ are to be stored in the forward adjacency property lists of $v$, each property list will have to be rearranged. This will change the positional offset of the existing edges at location $\geq5$ in $A$. Updating the positional offsets of these edges in their occurance in the other adjacency list requires accessing and traversing $n$ adjacency lists, which is costly.
 	
-	\item \textbf{High memory overhead:} Apart from costly insertions, a property list per edge property per vertex requires keeping a pointer to each of the list which contributes significantly to the overall memory footprint for storing edge properties.
+	\item \textbf{Huge memory overhead:} Apart from costly insertions, a property list per edge property per vertex requires keeping a pointer to each of the list which contributes significantly to the overall memory footprint for storing edge properties.
 \end{itemize}
 
 \vspace{-16pt}
@@ -106,40 +106,39 @@ We store the property values of $n$ property lists in one unordered page. We cal
 	\vspace{-40pt}
 	\hfill\includegraphics[scale=0.78]{img/paged}\hspace*{\fill}
 	\captionsetup{justification=centering}
-	\caption{Mapping single-directional adjacency property lists to single-directional adjacency property pages for since property in Figure~\ref{fig:runn}.Here, $n=2$.}
+	\caption{Mapping single-directional adjacency property lists to single-directional adjacency property pages for since property in Figure~\ref{fig:runn}.$n=2$.}
 	\label{fig:paged}
 	\vspace{-5pt}
 \end{figure}
 
-Figure~\ref{fig:paged} shows the mapping of a single-directional adjacency property lists to single-direstional adjacency property pages for $n=2$. The paged edge property column has two pages that stores the property values from vertex groups $(v1,v2)$ and $(v3,v4)$ respectively, assuming that the local positional offset of $vi$ is $i$.
+Figure~\ref{fig:paged} shows the mapping of a single-directional adjacency property lists to single-direstional adjacency property pages for $n=2$. The paged edge property column has two pages that stores the property values from vertex groups $(v1,v2)$ and $(v3,v4)$ respectively, assuming that the local positional offset of $vi$ is $i$ and $pi$ is the $i$th property page for \texttt{since} property. 
 
 The value of $n$ is chosen such that edges' property value are not too far apart from how they were stored in the property lists. This reduces the cache miss to occur with \emph{each} access of a value in a page. Hence, the value of $n$ is dependant on 3 factors: 1) the cache line size; 2) width of an element in the page, and 3) average number of edges in the adjacency lists. Ideally, the value of n is optimum in the range $[32, 512]$. We show in evaluation that our solution is not significantly worse than the single-directional adjacency property lists when performing sequential reads. Comparing the two, we get that our solution is 1.2x slower at the maximum for read-intensive workloads. Running the same workload using unordered edge property columns, accessing the edge properties is 4.5x slower than single-directional adjacency property lists.
 
-\section{Storage optimizations}
+\section{Columns for 1-1, 1-n, n-1 Cardinality Edges}
+\label{sec:cols-for-single-cardinality}
+
+Single cardinality labels are edge labels that have one of the following cardinalities, 1) 1..1 (one-to-one), 2) 1..n (one-to-many), and 3) n..1 (many-to-one). Such labels guarantee that there will be at most a single edge from the source vertex or to the destination vertex. For instance, let us consider an edge label BIRTHDAY that connects a vertex of type PERSON to the vertex of type DATE. Cardinality of BIRTHDAY is \emph{many-to-one}. That is, a vertex PERSON is connected to only one vertex of type DATE, while a vertex DATE can have connections to multiple PERSONs through the edge of label BIRTHDAY.
+
+Single cardinality labels provide the opportunity of optimizing how the edges of such labels are stored. We use the fact that an edge $e$ of a single cardinality label is the \emph{only} element in either the forward adjacency list of $e$'s source vertex or forward adjacency list of $e$'s destination vertex or both. 
+
+...
+
+\section{Storing Edges and Vertices in Adjacency Lists}
 \label{sec:storage-optimizations}
 
-In this section, we present ideas on how our storage benefits (in terms of reducing the memory footprint) from the new identification schemes and structures that the data-structures introduced in previous sections. Our optimizations are critical in achieving high-levels of compactions while storing edges in the adjacency lists, thereby reducing the overall memory footprint of data in the system.
+In this section, we show how vertices and edges can be stored compactly in the adjacency lists using the new identification schemes that we introduced in Sections \ref{sec:vertex-property-columns} and \ref{sec:edge-property-columns}. In particular, decomposing the ID into a number of small compoenents enables us to either avoid storing the component, wherever it can be inferred, or store it in a compressed fashion using one of the compression techniques we describe in Chapter~\ref{columnar-compression}.
 
-\subsection{Removing unnecessary edge information.}
+The new edge identification scheme recognizes an edge with 4 components: 1) edge label, 2) source vertex, 3) destination vertex and 4) local positional offset in the property pages of its properties. However, while storing the edge in its source or destination vertex's adjacency list, the edge label, source destination vertex components can be omitted. For instance, while storing an edge $e(u,v)$ having edge label $le_i$ in the $u$'s adjaceny list of $le_i$ edges, we store projection of $e$'s ID with $le_i$ and $u$ factored out. $v$ is not stored either, since the neighbour vertex is stored beside each edge by default. Finally, the positional offset can be stored cheaply as, often they are not more than 1 or 2 bytes hence. This follows from the fact that the number of edges in most of the adjacency list is realtively small (by the power-law) and so are the number of elements in each page. 
 
-The new edge identification scheme is \emph{virtual}. We do not need to store all the 4 components of the new edge identifier. While iterating on an adjacency list, the edge label of adjacent edge $e$ and the extending vertex ($e$'s source vertex in forward adjacency list and it's destination vertex in backward adjacency list) are already known and hence are not stored in the list. The neighbouring vertex ($e$'s destination vertex in forward adjacency list and source vertex in backward adjacency list) identifier is stored from prior. Therefore, the only storage overhead is the group-level positional offset. The offset is often not more than 1 or 2 bytes. This follows from the fact that the number of edges in most of the adjacency list is very small (by the power-law). Hence, storing the group-level positional offsets as a variable-width element saves memory by 2-3x. Moreover, in many cases, even group-level positional offsets can be omitted from storing in adjacency lists. We look at these cases in \ref{sec:storage-optimizations}.
-
-At the time we introduced the new edge identification scheme in \ref{sec:edge-property-columns}, we briefly discussed the size of storing each edge in the adjacency lists. Out of 4 components in the new edge identifier, only 2 components, \emph{(neighbouring vertex, page-level positional offset)}, are needed to be stored per edge in the adjacency list. Note that the neighbouring vertex itself comprises of 2 components: \emph{(vertex type, type-level positional offset)}. Given that the vertex identifier is 12 bytes and page-level positional offset can be stored in 1 or 2 bytes, storing an edge in an adjacency list takes 14 bytes. We can omit to store the few components of the edge in the following cases: 
+To sum up, each entry in the adjacency list stores a small (1-2 byte) positional offset and the neighobur vertex ID which itself comprises of vertex label and local positional offset. We now present some common scenarios that allows for even futher compaction by chosing to omit storing certain componenents:
 
 \begin{itemize}
-	\item \textbf{Neighbouring vertex's type can be omitted while storing edges if it can be inferred implicitly.} We know by \ref{ssec:graph-schema}, that an edge label $l$ has a fixed set of source vertex types and destination vertex types. Using this, we can infer the \emph{probable set} of neighbouring vertex types, $T_N$, while extending a vertex. $T_N$ is defined as the set of vertex types whose vertices an extending vertex can extend to.
-
-	Note that during the \texttt{E/I} operation, we already know, 1) the extending vertex, 2) \emph{direction} of extend, and 3) the edge label of edge we want to extend to. $T_N$ can be determined from the edge label and the direction of extend. If direction of extend is forward, $T_N$ is the destination vertex types of the edge label. Similarly, if direction is backward, source vertex types of the edge label forms $T_N$. 
+	\item \textbf{Edge label can determine the neighbour vertex label.} We know from Guideline~\ref{gdln:graph-schema} that the edge labels can determine the source or destination vertex labels whose vertices can have that label's edge. Using this information, we can determine the neighbour vertex labels in an adjacency list with edges of a single edge label. For instance, our example graph in Figure~\ref{fig:runn} contains edges having label FOLLOWS only between vertices having label PERSON. Hence, joining from any of PERSON vertex's forward (or backward) adjacency lists with edges having label FOLLOWS, we can be inferred that all the neighbour vertices in the adjacency list have label PERSON. For cases when the edge label has only a single neighbour vertex label, explicitly storing the same neighbour vertex label with each edge in the adjacency list can be avoided.This limits this optimization only to the case when cardinality of source or destination vertex labels set of an edge label is 1. Still, the optimization holds much relevance since edge labels in the graph data are mostly defined between a single source and destination vertex label. 
 	
-	For cases when $|T_N|$ is $1$, the neighbouring vertex type in our extend operation is fixed. In these case, there is no need to store the neighbouring vertex types with \emph{all} the edges in adjacency list - and can be determined from the graph's schema. The following rules assist the omission of neighbour vertex types while storing edges:
+	\item \textbf{Edges do not have properties.} In the absence of any properties on edges having label $le_i$, i.e, the set of structured properties determined by $le_i$ is empty, the page-level positional offset of $le_i$ edges is undefined. We can store such edges in the adjacency list without their positional offsets. With page-level positional offset undefined, an edge cannot be identified globally since there can be multiple edge with unique \emph{(edge label, source vertex, destination vertex)} tuple. We reason that there is no need for an edge to be \emph{identifiable} in the system if not for accessing its properties. Conventionally, the purpose an  \texttt{edgeID} has been two-fold, 1) to connect source and destination vertices and, 2) to reference edge properties (if present). We are able to still fulfill 1) while 2) stands void in the current scenario. 
 	
-	\begin{itemize}
-		\item If edge label $l$ has only a source vertex type, then an edge $e$, from vertex $u$ to $v$ and having label $l$, can be stored without the neighbour vertex type in the backward adjacency lists of $v$.
-		
-		\item Similarly, if edge label $l$ has only a destination vertex type, then an edge $e$, from vertex $u$ to $v$ and having label $l$, can be stored without the neighbour vertex type in the forward adjacency lists of $u$.
-	\end{itemize}
-
-    \item \textbf{Edges that do not have properties, do not need page-level positional offsets.} From section \ref{sec:edge-property-columns} and \ref{sec:page-level-edge-property-columns}, we know that an edge's positional offsets is required \emph{only} while accessing its properties' value from relevant page-level edge property columns. Hence, in the absence of any properties on an edge, the (page-level) positional offset of that edge is undefined. Such edges are stored in the adjacency lists without any positional offsets information. In the absense of page-level positional offset, an edge cannot be identified globally since there can be multiple edge with unique \emph{(edge label, source vertex, destination vertex)} tuple. We reason that there is no requirement for an edge to be \emph{identifiable} in the system if not for accessing its properties. Conventionally, the purpose an  \texttt{edgeID} has been two-fold, 1) to connect source and destination vertices and, 2) to reference edge properties (if present). We are able to still fulfill 1) by not having a page-level positional offset while 2) stands void in the absence of properties. 
+	\item \textbf{Edge label has cardinality 1-1, 1-n, n-1.} As detailed in Section~\ref{sec:cols-for-single-cardinality}, we do n
 	
 \end{itemize}
 
@@ -147,11 +146,3 @@ At the time we introduced the new edge identification scheme in \ref{sec:edge-pr
 
 The components of an edge identifier, usually, do not occupy the entire-width allocated to them in storage. For instance, a neighbouring vertex type is stored as a fixed 4-byte value in the adjacency lists. Likewise, neighbouring vertices' type-level positional offsets do not often exhaust the whole of 8 bytes allocated to them in storage. Clearly 
 
-
-\subsection{Vertex property columns for single cardinality labels.}
-
-Single cardinality labels are edge labels that have one of the following cardinalities, 1) 1..1 (one-to-one), 2) 1..n (one-to-many), and 3) n..1 (many-to-one). Such labels guarantee that there will be at most a single edge from the source vertex or to the destination vertex. For instance, let us consider an edge label BIRTHDAY that connects a vertex of type PERSON to the vertex of type DATE. Cardinality of BIRTHDAY is \emph{many-to-one}. That is, a vertex PERSON is connected to only one vertex of type DATE, while a vertex DATE can have connections to multiple PERSONs through the edge of label BIRTHDAY.
-
-Single cardinality labels provide the opportunity of optimizing how the edges of such labels are stored. We use the fact that an edge $e$ of a single cardinality label is the \emph{only} element in either the forward adjacency list of $e$'s source vertex or forward adjacency list of $e$'s destination vertex or both. 
-
-...
