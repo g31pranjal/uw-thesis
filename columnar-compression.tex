@@ -5,7 +5,7 @@ Compression in column-oriented storage has been extensively researched \cite{aba
 
 We begin by exploring the set of requirements in Section~\ref{sec:col-existing}. Based on these requirements, we review the applicability of a number of existing columnar compression techniques. Section~\ref{sec:sparse} discusses the case of data sparsity in our columns and why existing solutions to compress spare columns are not applicable to our case. Finally, we end the chapter by introducing a new NULL compression algorithm, called \emph{prefixSum-based NULL compression}, that addresses the shortcomings of existing solutions to compress sparse columns, in Seciton~\ref{sec:prefixbased}.
 
-\section{Existing Techniques for Compressing Columns}
+\section{Directly Applicable Compressing Techniques}
 \label{sec:col-existing}
 
 We designed our columnar data structures for in-memory \gls{gdbms}. For these data structures, the focus with compression is not on achieving high compression ratios but to optimize for high decompression rates or to avoid decompression of data at all. There has been much research that studies compression techniques from the point of avoiding eager decompression of compressed data \cite{westmann-comp, dat-comp}. \cite{abadi-col-comp} abstracts out the high-level properties of a compression algorithm and use this information in query executor to operate directly on compressed data whenever possible. Our's is an identical requirement in the sense that operating directly on compressed data can avoid CPU overhead and increases the read throughput while reading from adjacency lists and property stores.
@@ -30,6 +30,32 @@ The only columnar compression techniques that keep the data in fixed-width bits 
 	\item \textbf{Frame Of Reference(FOR): }This technique is similar to the previous, instead each element $e$ is stored as NULL supressed $e-b$, $b$ is called the \emph{base value} of the column or block. Generally, for an integer column, its smallest element is take as the base value. FOR is effective when the elements of column are clustered.
 	
 \end{itemize}
+
+\section{Compressed Storage of Edge and Vertex ID Pairs in Adjacency Lists}
+\label{sec:storage-optimizations}
+
+In this section, we show how vertices and edges can be stored compactly in the adjacency lists using the new identification schemes that we introduced in Sections \ref{sec:vertex-property-columns} and \ref{sec:edge-property-columns}. Decomposing the IDs into multiple small components often enables us to factor out most of these components, when they are in the structure of the data.  
+%either avoid storing components which are unnecessary or can be inferred, or store it in a compressed fashion using one of the compression techniques we describe in Chapter~\ref{columnar-compression}.
+
+Recall that the ID of an edge $e$ in our new edge ID scheme contains 4 components: (i) edge label; (ii) source vertex ID; (iii) destination vertex ID; and (iv) positional offset of the properties of $e$ in property pages. Recall also that then ID of a vertex $v$ contains 2 components: (i) vertex label; and (ii) (label-level) positional offset. First, both the source or the destination vertex IDs can be omitted when storing an (edge ID, neighbor ID) pair because the source (destination) vertex ID is implied by the offset of the pair in the forward (backward) adjacency list and the destination (source) vertex ID is the neighbor ID, which is already stored in the pair. Second, we do not have to store the labels of the edges as in our storage of the adjacency lists, we store a different CSR-like structure for each edge label. Therefore the only parts that need to be stored are positional offsets for edge IDs, and vertex label and positional offsets of neighbor IDs. We next discuss further cases when the structure and multiplicities of edges allows us to factor some of these components out: \todo{I'm removing positional offsets being 1-2 bytes. That is basically trailing 0 compression (let's not call it null compression) and should appear under compression.}
+%Finally, the positional offset can be stored cheaply as often they are not more than 1 or 2 bytes hence. This follows from the fact that the number of edges in most of the adjacency list is relatively small (by the power-law) and so are the number of elements in each page. 
+
+%To sum up, each entry in the adjacency list stores a small (1-2 byte) positional offset and the neighbour vertex ID which itself comprises of vertex label and local positional offset. We now present some common scenarios that allow for even further compaction by choosing to omit to store certain components:
+
+\begin{itemize}
+	\item \textbf{Edge label determines a single neighbour vertex label.} In this very frequent case, an edge label is between pairs of nodes when the sources or destinations (or both) can have a single label . For instance, in our example graph, FOLLOWS edges are between vertices having label PERSON. In this case, we can factor out the vertex label component of neighbor ID.
+		
+	\item \textbf{Edges do not have properties:} This is also a frequently appearing case. That is the edges with a particular label do not have any structured or unstructured properties. In this case, notice that the edges do not need to be identifiable at all as the system will never access properties of these edges. Therefore, what distinguishes two edges are their neighbor IDs and edges with the same IDs are simply replicas of each other and are stored twice. Therefore, we can omit storing the positional offsets of edge IDs.
+	
+	\item \textbf{Single cardinality edges:} Recall from Section~\ref{} that the properties for single cardinality edges can be stored in vertex property columns. So by using the source or destination vertex IDs, we can directly read properties. Therefore, we can omit storing any positional offsets. 
+		
+\end{itemize}
+All of the above case arise frequently in real world graph data. For example, in the LDBC benchmark dataset, X  out of Y many edge labels determine a single neighbour labels, X many do not have any properties, X many have single cardinality edges. This results in X many of them not requiring storing any neighbor vertex's labels or positional IDs, which implies that we only store a neighbor label-label positional offset, which can be stored with as few as 4 bytes. \todo{Fix.} 
+
+% **** Let's not call NULL compression but "trailing 0 omission" and I think let's not talk about factoring things out 
+%Using the new identification scheme and further applying the above-mentioned optimizations, the adjacent edges and neighbour vertices in adjacency lists by as less as a single piece of information. We can still further reduce the memory footprint of adjacency lists by applying compression on components of the edge that has to be stored after removing unnecessary ones. We use \emph{fixed-bitwidth NULL compression}, which we describe in Section~\ref{sec:col-existing}, to compress the components of edge in the adjacency lists. Using this technique, a particular component of each edge in an adjacency list is encoded as fixed-width elements by removing a common number of leading zero bytes (that will be determimined by the maximum element) from each of them. For example, if an adjacency list has edge $[e1, e2, e3, e4, e5]$ with the neighbour vertex labels $[1, 2, 1, 1, 2]$, then the neighbour vertex label is encoded in 1 byte in the adjacency list, instead of usual 4-byte INT. Similarly, if the same set of edges have neighbour's local positional offsets $[1000, 2000, 3000, 2, 1]$, then each offset is stored in 2 bytes in the adjacency list.
+
+We show the decrease in memory footprint of the adjacency lists, with each optimization, over the LDB SnB dataset, with more than 1 billion edges, in Chapter~\ref{c:evaluation}. Our evaluations reveal that the new scheme with opportunities to perform immense compaction and compression can reduce the size of adjacency lists by upto 94x, storing barely over 6 bytes of data per indexed edge in the system.
 
 \section{Columns with Sparse Data}
 \label{sec:sparse}
