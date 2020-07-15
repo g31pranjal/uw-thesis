@@ -88,6 +88,7 @@ We next outline a set of guidelines and desiderata for designing the physical da
 	During the execution of a query, the \texttt{JOIN} operator will access the edges of a vertex $v$ in the order these edges appear in $v$'s (forward/backward) adjacency lists. If the query also needs to access the properties of these edges, the access to these edge properties will also be in the same order in which edges were read from the adjacency list. Given that the edges and edge properties are read in order, our first desideratum for the physical data layout and query processor is:
 	
 	\begin{desideratum}
+		\label{des1}
 		Store the properties of edges in the order in which edges are ordered in the adjacency lists and read the edges and their properties sequentially in the operators
 	\end{desideratum}
 	
