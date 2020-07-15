@@ -38,12 +38,9 @@ An intrinsic problem with operating vector-at-a-time or column-at-a-time is that
 \section{List-based Processing}
 \label{sec:list-based-proc}
 
-A typical workload on a \gls{gdbms} involves matching long path queries on the input graph, which means a large number of usage of \texttt{JOIN} operators in the query plan. If such a query is executed in vectorized processing model, the problem of data duplication gets aggrevated to extreme levels and bulk of the query execution time is wasted in copying the input partial match. On the other hand, using pure volcano-style processing do not reap the benefits of ordered arrangement of data in adjacency lists and property pages. To elevate the problem of data duplication, we present a new query execution technique called \textbf{List-based processing}, that still uses the volcano-styles nesting of operators but processes a query by one adjacency list-at-a-time. In particular, edges of a single adjacency lists are evaluated in a single operation by operators. Since all the edges of a single adjacency list 
+A typical workload on a \gls{gdbms} involves matching long path queries on the input graph, which means a large number of usage of \texttt{JOIN} operators in the query plan. If such a query is executed in vectorized processing model, the problem of data duplication gets aggrevated to extreme levels and bulk of the query execution time is wasted in copying the input partial match. On the other hand, using pure volcano-style processing do not reap the benefits of ordered arrangement of data in adjacency lists and property pages. To elevate the problem of data duplication, we present a new query execution technique called \textbf{List-based processing}, that still uses the volcano-styles nesting of operators but processes a query by one adjacency list-at-a-time. In particular, a vertex $t$ in the partial match $t$ is joined to all adjacent edge and neighbour vertices in its adjacency list in a single execution of \texttt{JOIN} operator and are processed in a single operation by other operators like \texttt{PROPERTY READER} and \texttt{FILTER}. 
 
-
-
-
-
+The implementation of List-based processing 
 
 
 
