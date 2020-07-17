@@ -8,7 +8,6 @@ In this chapter, we introduce a new query processing technique, List-based query
 Almost all the \gls{gdbms} we are aware of uses the \textbf{Volcano-styled iteration model}~\cite{volcano} to execute a query. In the volcano-styled execution pipeline, each operator stores the reference of the next operators in the query plan. Execution happens tuple-at-a-time, with either operator operating on a partial match and pushing the result to the new operator in the pipeline. In particular, while processing a query volcano-styled, the edges of an adjacency list is read one at a time and processed further, making the access to the edge essentially random. Thus, this technique is oblivious to the fact that the edges in the adjacency lists are read in the same order in which they are stored, as stated in our Guideline~\ref{ssec:edges-ordered}. Clearly, processing the query volcano-styled does not agree with our Desiridatum~\ref{des1}. Even for the case of reading edge properties, we do not derive cache locality benefits from storing the properties of sequential edges nearby, since the access is mostly random. Also, the number of operations that are executed with volcano-styled processing is very high owing to the fact that each operator is particularly called as many times as there are input partial matches to. The large number of function calls adds significantly to the runtime of query execution on rad-intensive workloads.
 
 \begin{example}
-	\vspace{5pt}
 	\label{ex:proc-example}
 	Consider the following query. 
 	{\em 
@@ -22,10 +21,10 @@ Almost all the \gls{gdbms} we are aware of uses the \textbf{Volcano-styled itera
 \vspace{-5pt}
 
 \begin{figure}
-	\hfill\includegraphics[scale=0.78]{img/proc-qp}\hfill
-	\vspace{-10pt}
-	\caption{Query plan for Example~\ref{ex:proc-example}.}
-	\vspace{-8pt}
+	\begin{center}
+		\includegraphics[scale=0.78]{img/proc-qp}
+	\end{center}
+		\caption{Query plan for Example~\ref{ex:proc-example}.}
 	\label{fig:proc-qp}
 \end{figure}
 
@@ -38,13 +37,17 @@ An intrinsic problem with operating vector-at-a-time or column-at-a-time is that
 \section{List-based Processing}
 \label{sec:list-based-proc}
 
-A typical workload on a \gls{gdbms} involves matching long path queries on the input graph, which means a large number of usage of \texttt{JOIN} operators in the query plan. If such a query is executed in vectorized processing model, the problem of data duplication gets aggrevated to extreme levels and bulk of the query execution time is wasted in copying the input partial match. On the other hand, using pure volcano-style processing do not reap the benefits of ordered arrangement of data in adjacency lists and property pages. To elevate the problem of data duplication, we present a new query execution technique called \textbf{List-based processing}, that still uses the volcano-styles nesting of operators but processes a query by one adjacency list-at-a-time. In particular, a vertex $v$ in the partial match is joined to edges and neighbour vertices in $v$'s adjacency list in a single execution of \texttt{JOIN} operator. Moreover, the result of the join is processed in a single operation by other operators like \texttt{PROPERTY READER} and \texttt{FILTER}.
+A typical workload on a \gls{gdbms} involves matching long path queries on the input graph, which means \texttt{JOIN} operator is used extensively in the query plan. If such a query is executed in vectorized processing model, the problem of data duplication gets aggrevated to extreme levels and bulk of the query execution time is wasted in copying the input partial match. On the other hand, using pure volcano-style processing do not reap the benefits of ordered arrangement of data in adjacency lists and property pages. To elevate the problem of data duplication, we present a new query execution technique called \textbf{List-based processing}, that still uses the volcano-styles nesting of operators but processes a query one adjacency list-at-a-time. In particular, a vertex $v$ in the partial match $t$ is joined to all the edges and their corresponding neighbour vertices in $v$'s adjacency list in a single execution of \texttt{JOIN} operator. The result of this operator, \texttt{LIST JOIN}, is a single partial match $t'$ with 2 \emph{list}s representing matched edges and vertices. Other opertions (like \texttt{PROPERTY READER} and \texttt{FILTER}) on these lists are atomic as well. Executing query with lists has clear benefits over both the existing techniques as it avoids data duplication in partial matches as well as perform sequential reads of edges and edge properties.
 
+\begin{figure}
+	\hfill\includegraphics[scale=0.78]{img/proc-lbqp}\hfill
+	\vspace{-10pt}
+	\caption{Query plan with List-based Processing for Example~\ref{ex:proc-example}.}
+	\vspace{-8pt}
+	\label{fig:proc-lbqp}
+\end{figure}
 
-
-
-
-
+Ideally, subsequent \texttt{JOIN}s over a list should produce nested lists for each neighobur vertex. However, our current implementation in Graphflow omits this list-based variant of the \texttt{JOIN} and limits joining from only a single neighbour vertex. This limits our query plan generator to producing plans with \texttt{LIST JOIN} in place of default \texttt{JOIN} only if any other \texttt{JOIN} in the plan is not dependant on \texttt{LIST JOIN}. Figure~\ref{fig:proc-lbqp} shows the query plan that operates on lists rather than single values. The last \texttt{JOIN} is \texttt{LIST JOIN} followed by the \texttt{LIST PROPERTY READER} for reading property of $ey$ edge matches. 
 
 
 

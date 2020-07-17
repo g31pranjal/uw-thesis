@@ -64,12 +64,10 @@ A general null compression technique is to treat the \texttt{NULL}s in the colum
 Abadi in reference \cite{abadi-sparse-col} has described three specific null compression techniques. All of these techniques list all non-null elements consecutively in a block of data. Then to indicate the positions of these non-null elements, they use different techniques. The simplest is to list along with each value the position. Borrowing the terminology from reference \cite{abadi-sparse-col}, this technique is designed for sparse columns, i.e., whose significant fraction of values, say $> 90\%$ are null. A more compact way, designed for columns that have low sparsity, is to list in a separate array the beginning and end indices of consecutive non-null values. The third technique, designed for columns with intermediate sparsity, is based on using bit-string to indicate if each location is null or not.  This is quite compact and requires only 1 bit extra storage per each cell in the block. Figure \ref{fig:null1} shows an example column and its null compressed version using the bit-string scheme. 
 
 \begin{figure}
-	\vspace{-20pt}
 	\hfill\includegraphics[scale=0.70]{img/null1}\hspace*{\fill}
 	\captionsetup{justification=centering}
 	\caption{\texttt{NULL} compression using bit-Strings.}
 	\label{fig:null1}
-	\vspace{-5pt}
 \end{figure}
 
 %The column is divided into block, where each compressed block holds 2 pieces of information: 1) a \textbf{non-\texttt{NULL}s array} that holds the non \texttt{NULL} values of the uncompressed block, and 2) a \textbf{bit-string} having a bit for each element in block, with 1's for non NULL elements. The storage overhead of the compressed block is only that of the bit-string which is 1 bit per element in the uncompressed block or 0.5 bit per non NULL element of the block that is 50\% occupied. Based on the sparsity, bit-string can be replaced by a list of offsets of non \texttt{NULL} elements in block for very sparse data, or list or ranges of non \texttt{NULL} elements for very dense data.
@@ -92,12 +90,10 @@ We next present a modification to the bit-string-based compression scheme to sat
 %the solution to overcome the problem of constant time random reads in the existing solutions for compressing \texttt{NULL}s in sparse columns. The high-level idea is to do away with iteration over the bit-string while accessing the particular element in the compressed column.
 
 \begin{figure}
-	\vspace{-20pt}
 	\hfill\includegraphics[scale=0.70]{img/null2}\hspace*{\fill}
 	\captionsetup{justification=centering}
 	\caption{PrefixSum-based \texttt{NULL} compression scheme. Chunk Size (n) = 4}
 	\label{fig:null2}
-	\vspace{-2pt}
 \end{figure}
 
 %Figure~\ref{fig:null2} depicts compression of a sparse column using our scheme, which we call \emph{prefixSum-based null compression}. It divides a block into chunks of fixed size $n$. A compressed block contains 3 pieces of information: 1) a non-\texttt{NULL}s array, 2) an array of bit-strings and, 3) an array of prefixSums. We store one bit-string of length $n$ and a prefixSum per chuck. Whereas the bit-string indicates positions in the chunk with non \texttt{NULL} elements, the prefixSum holds the number of non \texttt{NULL} elements in the uncompressed block before the current block. 
