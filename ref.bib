@@ -7,6 +7,24 @@
 	volume={abs/2004.00130}
 }
 
+@article{compress-transitive-closure,
+	author = {Jagadish, H. V.},
+	title = {A Compression Technique to Materialize Transitive Closure},
+	year = {1990},
+	issue_date = {Dec. 1990},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {15},
+	number = {4},
+	issn = {0362-5915},
+	url = {https://doi.org/10.1145/99935.99944},
+	doi = {10.1145/99935.99944},
+	journal = {ACM Trans. Database Syst.},
+	month = dec,
+	pages = {558–598},
+	numpages = {41}
+}
+
 @article{boncz-phd,
 	author = {Boncz, Peter},
 	year = {2002},
@@ -30,6 +48,7 @@
 	volume={35},
 	pages={21-27}
 }
+
 @article{monet-2decades,
 	author = {Idreos, Stratos and Groffen, F. and Nes, Niels and Manegold, Stefan and Mullender, Sjoerd and Kersten, Martin},
 	year = {2012},
@@ -59,12 +78,29 @@
 }
 
 @article{lemire:integer,
-author = {Lemire, Daniel and Boytsov, Leonid},
-year = {2015},
-month = {01},
-title = {Decoding billions of integers per second through vectorization},
-volume = {45},
-journal = {Software: Practice and Experience},
+	author = {Lemire, Daniel and Boytsov, Leonid},
+	year = {2015},
+	month = {01},
+	title = {Decoding billions of integers per second through vectorization},
+	volume = {45},
+	journal = {Software: Practice and Experience},
+}
+
+@article{rdf-vertical-critic,
+	author = {Sidirourgos, Lefteris and Goncalves, Romulo and Kersten, Martin and Nes, Niels and Manegold, Stefan},
+	title = {Column-Store Support for RDF Data Management: Not All Swans Are White},
+	year = {2008},
+	issue_date = {August 2008},
+	publisher = {VLDB Endowment},
+	volume = {1},
+	number = {2},
+	issn = {2150-8097},
+	url = {https://doi.org/10.14778/1454159.1454227},
+	doi = {10.14778/1454159.1454227},
+	journal = {Proc. VLDB Endow.},
+	month = aug,
+	pages = {1553–1563},
+	numpages = {11}
 }
 
 @article{survey,
@@ -139,6 +175,133 @@ journal = {Software: Practice and Experience},
 	doi = {10.1109/SOAC.1991.143840}
 }
 
+@article{k2triples,
+	author    = {Sandra {\'{A}}lvarez{-}Garc{\'{\i}}a and
+	Nieves R. Brisaboa and
+	Javier D. Fern{\'{a}}ndez and
+	Miguel A. Mart{\'{\i}}nez{-}Prieto},
+	title     = {Compressed k2-Triples for Full-In-Memory {RDF} Engines},
+	journal   = {CoRR},
+	volume    = {abs/1105.4004},
+	year      = {2011},
+	url       = {http://arxiv.org/abs/1105.4004},
+	archivePrefix = {arXiv},
+	eprint    = {1105.4004},
+	timestamp = {Mon, 13 Aug 2018 16:47:40 +0200},
+	biburl    = {https://dblp.org/rec/journals/corr/abs-1105-4004.bib},
+	bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{hexastore,
+	title={Hexastore: sextuple indexing for semantic web data management},
+	author={Weiss, Cathrin and Karras, Panagiotis and Bernstein, Abraham},
+	journal={Proceedings of the VLDB Endowment},
+	volume={1},
+	number={1},
+	pages={1008--1019},
+	year={2008},
+	publisher={VLDB Endowment}
+}
+
+@inproceedings{hana-graph,
+	author = {Rudolf, Michael and Paradies, Marcus and Bornhövd, Christof and Lehner, Wolfgang},
+	year = {2013},
+	month = {01},
+	pages = {403-420},
+	title = {The graph story of the SAP HANA database},
+	journal = {Lecture Notes in Informatics (LNI), Proceedings - Series of the Gesellschaft fur Informatik (GI)}
+}
+
+@article{rdf-3x,
+	author = {Neumann, Thomas and Weikum, Gerhard},
+	year = {2010},
+	month = {02},
+	pages = {91-113},
+	title = {The RDF3X engine for scalable management of RDF data},
+	volume = {19},
+	journal = {The Vldb Journal - VLDB},
+	doi = {10.1007/s00778-009-0165-y}
+}
+
+@inproceedings{compact-rep-graph,
+	author = {\'{A}lvarez, Sandra and Brisaboa, Nieves R. and Ladra, Susana and Pedreira, \'{O}scar},
+	title = {A Compact Representation of Graph Databases},
+	year = {2010},
+	isbn = {9781450302142},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/1830252.1830255},
+	doi = {10.1145/1830252.1830255},
+	booktitle = {Proceedings of the Eighth Workshop on Mining and Learning with Graphs},
+	pages = {18–25},
+	numpages = {8},
+	keywords = {social networks, compression, graph mining},
+	location = {Washington, D.C.},
+	series = {MLG ’10}
+}
+
+@inproceedings{rdf-vertical,
+	title={Scalable semantic web data management using vertical partitioning},
+	author={Abadi, Daniel J and Marcus, Adam and Madden, Samuel R and Hollenbach, Kate},
+	booktitle={Proceedings of the 33rd international conference on Very large data bases},
+	pages={411--422},
+	year={2007}
+}
+
+@InProceedings{hdt,
+	author="Fern{\'a}ndez, Javier D.
+	and Mart{\'i}nez-Prieto, Miguel A.
+	and Gutierrez, Claudio",
+	editor="Patel-Schneider, Peter F.
+	and Pan, Yue
+	and Hitzler, Pascal
+	and Mika, Peter
+	and Zhang, Lei
+	and Pan, Jeff Z.
+	and Horrocks, Ian
+	and Glimm, Birte",
+	title="Compact Representation of Large RDF Data Sets for Publishing and Exchange",
+	booktitle="The Semantic Web -- ISWC 2010",
+	year="2010",
+	publisher="Springer Berlin Heidelberg",
+	address="Berlin, Heidelberg",
+	pages="193--208",
+	abstract="Increasingly huge RDF data sets are being published on the Web. Currently, they use different syntaxes of RDF, contain high levels of redundancy and have a plain indivisible structure. All this leads to fuzzy publications, inefficient management, complex processing and lack of scalability. This paper presents a novel RDF representation (HDT) which takes advantage of the structural properties of RDF graphs for splitting and representing, efficiently, three components of RDF data: Header, Dictionary and Triples structure. On-demand management operations can be implemented on top of HDT representation. Experiments show that data sets can be compacted in HDT by more than fifteen times the current naive representation, improving parsing and processing while keeping a consistent publication scheme. For exchanging, specific compression techniques over HDT improve current compression solutions.",
+	isbn="978-3-642-17746-0"
+}
+
+
+@inproceedings{rbcomp,
+	title={1-1-2013 Logical Linked Data Compression},
+	author={Amit Krishna Joshi and Pascal Hitzler},
+	year={2017}
+}
+
+@article{ik2trees,
+	title={A succinct data structure for self-indexing ternary relations},
+	author={Sandra {\'A}lvarez-Garc{\'i}a and Guillermo de Bernardo and Nieves R. Brisaboa and Gonzalo Navarro},
+	journal={J. Discrete Algorithms},
+	year={2017},
+	volume={43},
+	pages={38-53}
+}
+
+@article{dbms-cache,
+	title={MonetDB/X100-A DBMS In The CPU Cache.},
+	author={Zukowski, Marcin and Boncz, Peter A and Nes, Niels and H{\'e}man, S{\'a}ndor},
+	year={2005},
+	publisher={Citeseer}
+}
+
+@book{design-imp-book,
+	author = {Abadi, Daniel and Boncz, Peter and Harizopoulos, Stavros},
+	title = {The Design and Implementation of Modern Column-Oriented Database Systems},
+	year = {2013},
+	isbn = {1601987544},
+	publisher = {Now Publishers Inc.},
+	address = {Hanover, MA, USA}
+}
+
 @book{bonifati-adj-lists,
 	title = {{Querying Graphs}},
 	author = {Bonifati, Angela and Fletcher, George and Voigt, Hannes and Yakovets, Nikolay},
@@ -155,7 +318,124 @@ journal = {Software: Practice and Experience},
 	hal_version = {v1},
 }
 
-@INPROCEEDINGS{goldstein:for,
+@Inbook{Claude2010,
+	author="Claude, Francisco
+	and Navarro, Gonzalo",
+	editor="Elomaa, Tapio
+	and Mannila, Heikki
+	and Orponen, Pekka",
+	title="Extended Compact Web Graph Representations",
+	bookTitle="Algorithms and Applications: Essays Dedicated to Esko Ukkonen on the Occasion of His 60th Birthday",
+	year="2010",
+	publisher="Springer Berlin Heidelberg",
+	address="Berlin, Heidelberg",
+	pages="77--91",
+	abstract="Many relevant Web mining tasks translate into classical algorithms on the Web graph. Compact Web graph representations allow running these tasks on larger graphs within main memory. These representations at least provide fast navigation (to the neighbors of a node), yet more sophisticated operations are desirable for several Web analyses.",
+	isbn="978-3-642-12476-1",
+	doi="10.1007/978-3-642-12476-1_5",
+	url="https://doi.org/10.1007/978-3-642-12476-1_5"
+}
+
+@inproceedings{k2trees,
+	title={k2-Trees for Compact Web Graph Representation},
+	author={Nieves R. Brisaboa and Susana Ladra and Gonzalo Navarro},
+	booktitle={SPIRE},
+	year={2009}
+}
+
+@inproceedings{suel,
+	title={Compressing the graph structure of the web},
+	author={Suel, Torsten and Yuan, Jun},
+	booktitle={Proceedings DCC 2001. Data Compression Conference},
+	pages={213--222},
+	year={2001},
+	organization={IEEE}
+}
+
+@inproceedings{compress-nbr-q,
+	author = {Maserrat, Hossein and Pei, Jian},
+	title = {Neighbor Query Friendly Compression of Social Networks},
+	year = {2010},
+	isbn = {9781450300551},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/1835804.1835873},
+	doi = {10.1145/1835804.1835873},
+	booktitle = {Proceedings of the 16th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+	pages = {533–542},
+	numpages = {10},
+	keywords = {social networks, compression, MPk linearization},
+	location = {Washington, DC, USA},
+	series = {KDD ’10}
+}
+
+@inproceedings{feder,
+	author = {Feder, Tom\'{a}s and Motwani, Rajeev},
+	title = {Clique Partitions, Graph Compression and Speeding-up Algorithms},
+	year = {1991},
+	isbn = {0897913973},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/103418.103424},
+	doi = {10.1145/103418.103424},
+	booktitle = {Proceedings of the Twenty-Third Annual ACM Symposium on Theory of Computing},
+	pages = {123–133},
+	numpages = {11},
+	location = {New Orleans, Louisiana, USA},
+	series = {STOC ’91}
+}
+
+@InProceedings{comp-rdf,
+	author="Pan, Jeff Z.
+	and P{\'e}rez, Jos{\'e} Manuel G{\'o}mez
+	and Ren, Yuan
+	and Wu, Honghan
+	and Wang, Haofen
+	and Zhu, Man",
+	editor="Supnithi, Thepchai
+	and Yamaguchi, Takahira
+	and Pan, Jeff Z.
+	and Wuwongse, Vilas
+	and Buranarach, Marut",
+	title="Graph Pattern Based RDF Data Compression",
+	booktitle="Semantic Technology",
+	year="2015",
+	publisher="Springer International Publishing",
+	address="Cham",
+	pages="239--256",
+	isbn="978-3-319-15615-6"
+}
+
+@inproceedings{graph-summ,
+	author = {Navlakha, Saket and Rastogi, Rajeev and Shrivastava, Nisheeth},
+	title = {Graph Summarization with Bounded Error},
+	year = {2008},
+	isbn = {9781605581026},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/1376616.1376661},
+	doi = {10.1145/1376616.1376661},
+	booktitle = {Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data},
+	pages = {419–432},
+	numpages = {14},
+	keywords = {graph compression, approximation, minimum description length},
+	location = {Vancouver, Canada},
+	series = {SIGMOD ’08}
+}
+
+@inproceedings{adler,
+	author = {Adler, Micah and Mitzenmacher, Michael},
+	title = {Towards Compressing Web Graphs},
+	year = {2001},
+	publisher = {IEEE Computer Society},
+	address = {USA},
+	booktitle = {Proceedings of the Data Compression Conference},
+	pages = {203},
+	numpages = {1},
+	series = {DCC ’01}
+}
+
+@inproceedings{goldstein:for,
 	author={J. {Goldstein} and R. {Ramakrishnan} and U. {Shaft}},
 	booktitle={ICDE}, 
 	title={{Compressing Relations and Indexes}}, 
@@ -178,6 +458,24 @@ journal = {Software: Practice and Experience},
 	location = {Scottsdale, Arizona, USA},
 	series = {SIGMOD ’12}
 }
+
+@inproceedings{col-vs-row,
+	author = {Abadi, Daniel J. and Madden, Samuel R. and Hachem, Nabil},
+	title = {Column-Stores vs. Row-Stores: How Different Are They Really?},
+	year = {2008},
+	isbn = {9781605581026},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/1376616.1376712},
+	doi = {10.1145/1376616.1376712},
+	booktitle = {Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data},
+	pages = {967–980},
+	numpages = {14},
+	keywords = {column-oriented dbms, compression, c-store, column-store, tuple materialization, tuple reconstruction, invisible join},
+	location = {Vancouver, Canada},
+	series = {SIGMOD ’08}
+}
+
 
 @inproceedings{abadi-col-comp,
 	author = {Abadi, Daniel and Madden, Samuel and Ferreira, Miguel},
@@ -343,6 +641,13 @@ journal = {Software: Practice and Experience},
 @Misc{neo4j-property-graph-model,
 	key        = {neo4j-property-graph-model},
 	title      = {Neo4j {{Property Graph Model}}},
-	year       = {2019},
+	year       = {2020},
 	howpublished = {\url{https://neo4j.com/developer/graph-database}}
+}
+
+@Misc{oracle,
+	key        = {oracle},
+	title      = {{{Oracle Spatial and Graph}}},
+	year       = {2020},
+	howpublished = {\url{https://www.oracle.com/database/technologies/spatialandgraph.html}}
 }
