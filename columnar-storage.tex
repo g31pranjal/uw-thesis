@@ -1,7 +1,7 @@
 \chapter{Columnar Storage}
 \label{c:columnar-storage}
 
-In this chapter, we explore the application of columnar data structures for different storage components of  \gls{gdbms}s to meet the desiderata we outlined in Chapter~\ref{c:guidelines}. Section \ref{sec:vertex-property-columns} describes the design of columns to store vertex properties and a new compact vertex ID scheme that accompanies the design. In Section \ref{sec:edge-property-columns}, we start by describing two columnar storage designs to store edge properties and their pros and cons. Then, we propose a third design, Single-directional property pages, that is a sweet spot between the earlier two designs and the one we adopt for storing edge properties. Similar to Section~\ref{sec:vertex-property-columns}, we describe a novel and compact edge ID scheme that accompanies our design from edge property columns. In Section~\ref{sec:single-cardinality-cols}, we describe a storage optimization that involves storing edges with cardinalities 1-1, 1-n, n-1 in vertex property columns instead of using the more heavy-weight CSR columnar structure. We address how to compress the data stored in these columnar structures in Chapter~\ref{columnar-compression}.
+In this chapter, we explore the application of columnar data structures for different storage components of  \gls{gdbms}s to meet the desiderata we outlined in Chapter~\ref{c:guidelines}. Section \ref{sec:vertex-property-columns} describes the design of columns to store vertex properties, called \emph{vertex columns}, and a new compact vertex ID scheme that accompanies the design. In Section \ref{sec:edge-property-columns}, we start by describing two columnar storage designs to store edge properties and their pros and cons. Then, we propose a third design, Single-directional property pages, that is a sweet spot between the earlier two designs and the one we adopt for storing edge properties. Similar to Section~\ref{sec:vertex-property-columns}, we describe a novel and compact edge ID scheme that accompanies our design from edge property columns. In Section~\ref{sec:single-cardinality-cols}, we describe a storage optimization that involves storing edges with cardinalities 1-1, 1-n, n-1 in vertex columns instead of using the more heavy-weight CSR columnar structure. We address how to compress the data stored in these columnar structures in Chapter~\ref{columnar-compression}.
 %Section~\ref{sec:storage-optimizations} describes several storage optimizations to the adjacency lists to reduce the system's memory footprint without sacrificing query performance, using different type of structure that may exist in input graphs that we observed in Guideline~\ref{gdln:graph-schema}.
 
 \section{Columnar Storage for Vertex Properties}
@@ -9,17 +9,17 @@ In this chapter, we explore the application of columnar data structures for diff
 
 \begin{figure}
 	\hfill\includegraphics[scale=0.85]{img/vpcols}\hspace*{\fill}
-	\caption{Vertex property columns for the graph in Figure~\ref{fig:runn}.}
+	\caption{Vertex columns for the graph in Figure~\ref{fig:runn}.}
 	\label{fig:vpcols}
 \end{figure}
 
-Columnar data-structures can be directly used for storing vertex properties. Let $(lv_1, lv_2, ...)$ be the vertex labels in a graph. Let $p_{i,1},  p_{i,2}, ... p_{i, n}$ be the structured vertex properties of $lv_i$, each with a specific datatype $d_{i,j}$. We define a \emph{vertex property column} for each $p_{i,j}$, having a fixed data type $d_{i,j}$. Each column stores the value of a single property $p_{i,j}$ for all vertices having $lv_i$ at consecutive locations. All property values of a particular vertex $v$ with label $lv_i$ is located at the same positional offset for each column for $p_{i,j}$. 
+Columnar data-structures can be directly used for storing vertex properties. Let $(lv_1, lv_2, ...)$ be the vertex labels in a graph. Let $p_{i,1},  p_{i,2}, ... p_{i, n}$ be the structured vertex properties of $lv_i$, each with a specific datatype $d_{i,j}$. We define a \emph{vertex column} for each $p_{i,j}$, having a fixed data type $d_{i,j}$. Each column stores the value of a single property $p_{i,j}$ for all vertices having $lv_i$ at consecutive locations. All property values of a particular vertex $v$ with label $lv_i$ is located at the same positional offset for each column for $p_{i,j}$. 
 
 % reading a property.
 
 Ideally, the property value of a vertex should directly be read using the ID of the vertex as the positional offset in the column. However, \gls{gdbms} typically gives globally unique 8-byte consecutive IDs to all the vertices in the system, irrespective of their labels. That means ID 0 can be given to a vertex with label PERSON and 1 to a vertex with label ORG and 2 to another vertex PERSON etc. We cannot use this ID scheme as the positional offset for the above design. One possible solution is to maintain a map for each label, from each vertex $v$'s \enquote{global} ID to a \enquote{local} label-level positional offset, which is unique only among all vertices with the same label as $v$. This requires extra storage for maintaining the map and one level of indirection when accessing the vertex properties. Instead, we adopted an ID scheme where each vertex is identified by a \emph{\textbf{(vertex label, label-level positional offset)}} tuple in the system in place of global vertex ID. This allows direct access to the properties by using the local positional offset which now is part of the vertex ID. However, using this new vertex ID scheme requires materializing 2 pieces of information in the adjacency lists - a vertex label and a local positional offset, compared with a single global vertex ID. This may increase the memory overhead  if the local positional offsets and the global vertex ID are of the same size. However, we will show in Section \ref{sec:storage-optimizations} that we can often avoid storing the vertex labels with vertex IDs and even save space by using fewer bytes for local positional offsets than the bytes needed by the global vertex IDs.
 
-For reference, Figure~\ref{fig:vpcols} shows a set of vertex property columns for our example graph in Figure~\ref{fig:runn}. It has 2 set of columns one for each vertex label, with a column for each structured property of the label. The global vertex IDs on the right of the set of columns of a vertex label indicates the positional offset at which the properties of a particular vertex are located in the columns of a family. For instance, the properties of vertex $v2$ appear at offset $1$ in columns of PERSON's family. By the new vertex ID scheme, $v2$ is identified as \texttt{PRESON:1}. 
+For reference, Figure~\ref{fig:vpcols} shows a set of vertex columns for our example graph in Figure~\ref{fig:runn}. It has 2 set of columns one for each vertex label, with a column for each structured property of the label. The global vertex IDs on the right of the set of columns of a vertex label indicates the positional offset at which the properties of a particular vertex are located in the columns of a family. For instance, the properties of vertex $v2$ appear at offset $1$ in columns of PERSON's family. By the new vertex ID scheme, $v2$ is identified as \texttt{PRESON:1}. 
 
 
 % updates.
@@ -76,7 +76,7 @@ A natural middle ground between edge property columns and double-indexed propert
 
 To access a property of an edge $e$ having label $le_i$, we need 3 pieces of information; 1) $q_{i,j}$; 2) source vertex if the $q_{i,j}$'s values are stored in the forward adjacency property lists, else destination vertex; and 3) the list-level positional offset of $e$ in that property list. For instance, in figure~\ref{fig:single-dir-prop-list}, \texttt{since} property of $e2$ can be accessed knowing $v4$ (source vertex of $e2$) and offset of $e2$ in $v4$'s forward adjacency property list, i.e 1. We adopt a new edge identification scheme that identifies the edge in the system by a tuple having 4 components: \textbf{\emph{(edge label, source vertex, destination vertex, list-level positional offset)}}. In our new scheme, the $e2$'s ID will be given as \texttt{FOLLOWS:v4:v1:2}, where $v4$ and $v1$ are the source and destination edges of $e2$. These edge IDs provides us with compact storage too. Most of the components need not be stored in the adjacency lists and the edge ID can be constructed during query execution by reading as few as only the neighbour vertex's local positional offset in the property list. 
 
-\noindent {\bf Limitation of single-directional property lists:} Though single-directional adjacency property lists are a good middle-ground solution, it has an important limitation. Suppose that the property list for property $q_{i,j}$ of edge label $le_i$ is indexed in the forward direction. If the original adjacency lists are sorted,  any insertion or deletion can change a large number of, possibly all of the positional offsets of every edge in the adjacency list. Suppose an edge is inserted to the beginning of $v$'s forward adjacency list $L_f$. This requires first calculating a map of old and new positional offsets of the edges in $L_f$, then searching through each backward neighbor of $v$ and finding each edge in the backward adjacency list and updating its positional offset. A similar problem exists when an edge is deleted. If the original edges are not sorted, then insertions can be handled easily but handling deletions is challenging. The system has two options for deletions. First, the system can directly delete the edge $e$, which again can change the positional offsets of as many as $|L_f|$ edges. Instead, the system can thumbnail $e$'s positional offset and recycled $e$'s positional offset as was described for vertex deletions. However, this is also expensive. In contrast to keeping a single list of recycled IDs as in vertex property columns, the system now needs to keep track of recycled positional offsets for each vertex, so up to $|V|$ many recycled IDs list.
+\noindent {\bf Limitation of single-directional property lists:} Though single-directional adjacency property lists are a good middle-ground solution, it has an important limitation. Suppose that the property list for property $q_{i,j}$ of edge label $le_i$ is indexed in the forward direction. If the original adjacency lists are sorted,  any insertion or deletion can change a large number of, possibly all of the positional offsets of every edge in the adjacency list. Suppose an edge is inserted to the beginning of $v$'s forward adjacency list $L_f$. This requires first calculating a map of old and new positional offsets of the edges in $L_f$, then searching through each backward neighbor of $v$ and finding each edge in the backward adjacency list and updating its positional offset. A similar problem exists when an edge is deleted. If the original edges are not sorted, then insertions can be handled easily but handling deletions is challenging. The system has two options for deletions. First, the system can directly delete the edge $e$, which again can change the positional offsets of as many as $|L_f|$ edges. Instead, the system can thumbnail $e$'s positional offset and recycled $e$'s positional offset as was described for vertex deletions. However, this is also expensive. In contrast to keeping a single list of recycled IDs as in vertex columns, the system now needs to keep track of recycled positional offsets for each vertex, so up to $|V|$ many recycled IDs list.
 
 \begin{figure}
 	\hfill\includegraphics[scale=0.78]{img/edge-scheme}\hspace*{\fill}
@@ -94,24 +94,65 @@ To access a property of an edge $e$ having label $le_i$, we need 3 pieces of inf
 	\label{fig:paged}
 \end{figure}
 
-%The mapping from a property list to its corresponding page is straightforward. Single-directional adjacency property list for vertex $v$ and property $q_{i,j}$ maps to the $i$th page for property $q_{i,j}$, where $i$ is mod $n$ of $v$'s local positional offset. The benefit of using pages comes from it being unordered. This makes new edge insertions easy as now, the new edge properties get appended into their respective pages or recycle the location of an already deleted edge, similar to how insertions happen in vertex property columns. 
+%The mapping from a property list to its corresponding page is straightforward. Single-directional adjacency property list for vertex $v$ and property $q_{i,j}$ maps to the $i$th page for property $q_{i,j}$, where $i$ is mod $n$ of $v$'s local positional offset. The benefit of using pages comes from it being unordered. This makes new edge insertions easy as now, the new edge properties get appended into their respective pages or recycle the location of an already deleted edge, similar to how insertions happen in vertex columns. 
 
 Figure~\ref{fig:paged} shows the mapping of a single-directional adjacency property lists to single-directional  property pages for $n=2$. The paged edge property column has two pages that stores the property values from vertex groups $(v1,v2)$ and $(v3,v4)$ respectively, assuming that the local positional offset of $vi$ is $i$ and $pi$ is the $i$th property page for \texttt{since} property. 
 %The value of $n$ is chosen such that edges' property values are not too far apart from each as they were stored in %the property lists. This reduces the cache miss to occur with \emph{each} access of a value in a page. Hence, the value of $n$ is dependant on 3 factors: 1) the cache line size; 2) width of an element in the page, and 3) the average number of edges in the adjacency lists. Ideally, the value of n is optimum in the range $[32, 512]$. 
 We show in evaluation that single-directional  property pages is similar, about 1.2x slower, in performance to single-directional property lists in read-heavy stress tests and about 4.5x faster than using edge property columns. 
 
-\section{Vertex Property Columns for Single Cardinality Edges}
+\section{Vertex Columns for Single Cardinality Edges}
 \label{sec:single-cardinality-cols}
-
-When an edge label has 1-1, 1-n, n-1 cardinality then vertices can have at most one edge in at least one direction. We refer to these edges as {\em single cardinality edges}. For instance, in our Figure~\ref{fig:runn} example graph, edge label STUDYAT and WORKAT have the cardinality \texttt{n-1}, i.e., a PERSON vertex can have at most one STUDYAT's and WORKAT's edge (in the forward direction). Therefore, instead of storing these single edge in the adjacency lists in last level of the 2-level CSR structure, we can store them as a \emph{property} of source or(and) destination vertex and directly access them using the positional offsets of the source or(and) destination vertex of the edge. This both saves space, as we do not need to store the CSR offsets, and we can directly access these edges with 1 instead of 2 random lookups in a CSR. Similarly, the properties of these edges can also be stored in vertex property columns as a property of either the source or destination vertex. Thus, we do not need page-level postional offsets for these single edges since the edge property can be accessed using the source or desitination vertex's positional offset, similar to how the edge is accessed. Figure~\ref{fig:single-cardinality-cols} shows the edges of edge label STUDYAT and WORKAT, from our example graph, and their properties being stored as the special property of vertex type PERSON.
-
-%Benefits of storing edges as special vertex properties is two-fold, Figure~\ref{fig:single-cardinality-cols} shows the STUDY AT edges stored as the special properties of PERSON vertices. Moreover, the properties of such an edge $e$ can also be stored in structures similar to the vertex property columns, instead of single-directiional property pages. These properties are hence, accessed by vertex $v$'s local positional offset, instead of page-level positional offset, where $v$ is the vertex whose special property the edge is. Thus, we do not need page-level positional offsets for the edges of single cardinality edge labels.
 
 \begin{figure}
 	\hfill\includegraphics[scale=0.78]{img/single-cardinality-cols}\hspace*{\fill}
 	\captionsetup{justification=centering}
-	\caption{Storage of edges having single cardinality edge label STUDYAT and WORKAT as special property of PERSON.}
+	\caption{Storage of edges having single cardinality edge label STUDYAT and WORKAT as special property of PERSON. \hspace{\textwidth} Properties of these edges are also stored in vertex columns of PERSON.}
 	\label{fig:single-cardinality-cols}
 \end{figure} 
 
 
+When an edge label has 1-1, 1-n, n-1 cardinality then vertices can have at most one edge in at least one direction. We refer to these edges as {\em single cardinality edges}. For instance, in our Figure~\ref{fig:runn} example graph, edge label STUDYAT and WORKAT have the cardinality \texttt{n-1}, i.e., a PERSON vertex can have at most one STUDYAT's and WORKAT's edge (in the forward direction). Therefore, instead of storing these single edge in the adjacency lists in last level of the 2-level CSR structure, we can store them as a \emph{property} of source or(and) destination vertex and directly access them using the positional offsets of the source or(and) destination vertex of the edge. This both saves space, as we do not need to store the CSR offsets, and we can directly access these edges with 1 instead of 2 random lookups in a CSR. Similarly, the properties of these edges can also be stored in vertex columns as a property of either the source or destination vertex. Thus, we do not need page-level postional offsets for these single edges since the edge property can be accessed using the source or desitination vertex's positional offset, similar to how the edge is accessed. Figure~\ref{fig:single-cardinality-cols} shows the edges of edge label STUDYAT and WORKAT, from our example graph, and their properties being stored as the special property of vertex type PERSON.
+
+%Benefits of storing edges as special vertex properties is two-fold, Figure~\ref{fig:single-cardinality-cols} shows the STUDY AT edges stored as the special properties of PERSON vertices. Moreover, the properties of such an edge $e$ can also be stored in structures similar to the vertex columns, instead of single-directiional property pages. These properties are hence, accessed by vertex $v$'s local positional offset, instead of page-level positional offset, where $v$ is the vertex whose special property the edge is. Thus, we do not need page-level positional offsets for the edges of single cardinality edge labels.
+
+
+\section{Summary}
+
+\begin{table}[t!]
+	\centering
+	\bgroup
+	\setlength{\tabcolsep}{10pt}
+	\def\arraystretch{1.3}%  1 is the default, change whatever you need
+	\begin{tabular}{ |c|c|c| } 
+		\hline
+		\multicolumn{2}{|c|}{\textbf{Data}} & \textbf{Columnar data structure} \\
+		\hline \hline
+		\multicolumn{2}{|c|}{Vertex Properties} & Vertex Columns \\
+		\hline \hline
+		\multirow{4}{60pt}{Edge Properties} & 1-1 & Vertex Column of either source or destination vertex label\\
+		\cline{2-3}
+		& 1-n & Vertex Column of destination vertex label\\
+		\cline{2-3}
+		& n-1 & Vertex Column of source vertex label\\
+		\cline{2-3}
+		& n-n & Single-directional Property Pages \\
+		\hline \hline
+		\multirow{7}{60pt}{Edge} & \multirow{2}{20pt}{1-1} & Vertex Columns of source vertex for forward edge \\
+		&& Vertex Column of destination vertex label for backward edge \\
+		\cline{2-3}
+		& \multirow{2}{20pt}{1-n} & CSR Adjacency lists for forward edge \\
+		&& Vertex Columns of destination vertex label for backward edge \\
+		\cline{2-3}
+		& \multirow{2}{20pt}{n-1} & Vertex Column of source vertex label for forward edge \\
+		&& CSR Adjacency lists for backward edge \\
+		\cline{2-3}
+		& \multirow{1}{20pt}{n-n} & CSR Adjacency lists for forward and backward edges \\
+		\hline
+	\end{tabular}
+	\egroup
+	\captionsetup{justification=centering}
+	\caption{Our Columnar data structures and the component of the property graph for which they are used.}
+	\label{tbl:summ}
+\end{table}
+
+Table~\ref{tbl:summ} presents the summary of our columnar data structures. Each of our structure support prefixSum-based null compression, defined in Section~\ref{sec:null}, to compress null values or empty adjacency lists.

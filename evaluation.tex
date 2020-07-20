@@ -64,7 +64,7 @@ Note that \texttt{+COLS} and \texttt{+NULL} are oblivious to the order in which 
 	\begin{tabular}{ |c|c|c|c|c|c|c| } 
 		\hline
 		& \texttt{GF-OLD} & \texttt{+COLS} & \texttt{+NEW-IDS} & \texttt{+0-CMPRS} & \texttt{+OMIT}& \texttt{+NULL} \\ 
-		\hline
+		\hline \hline
 		Fwd. Adjacency Lists& 38.25 & 33.25 & 27.22 & 16.35 & 11.14 & 10.53 \\ 
 		\hline
 		Bwd. Adjacency Lists& 37.93 & 37.50 & 30.93 & 18.75 & 12.79 & 11.15 \\ 
@@ -105,8 +105,8 @@ Table~\ref{tbl:mem1} shows the memory utiliation (in GB) by the adjacency lists 
 	\def\arraystretch{1.2}%  1 is the default, change whatever you need
 	\begin{tabular}{ |c|c|c| } 
 		\hline
-		& 1-hop & 2-hop \\ 
-		\hline
+		& \textbf{1-hop} & \textbf{2-hop} \\ 
+		\hline \hline
 		Edge Property Columns& 3.42 & 308.18 \\ 
 		\hline
 		\multirow{2}{*}{Single-directional Property Lists}& 1.03 & 125.65 \\ 
@@ -142,8 +142,8 @@ Our workload consist of simple k-hop for $k=1,2,3$. queries on \texttt{replyOf} 
 		\def\arraystretch{1.2}%  1 is the default, change whatever you need
 		\begin{tabular}{ |c|c|c|c|c| }
 			\hline
-			& 1-hop & 2-hop & 3-hop & Memory (in MB) \\ 
-			\hline
+			& \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} & \textbf{Memory (in MB)} \\ 
+			\hline \hline
 			2-level CSR Adjacency Lists& 7.03 & 9.13 & 9.60 & 1266.56 \\ 
 			\hline
 			Vertex Property Columns& 4.34 & 5.80 & 5.85 & 839.93 \\ 
@@ -163,8 +163,8 @@ Our workload consist of simple k-hop for $k=1,2,3$. queries on \texttt{replyOf} 
 		\def\arraystretch{1.2}%  1 is the default, change whatever you need
 		\begin{tabular}{ |c|c|c|c|c| } 
 			\hline
-			& 1-hop & 2-hop & 3-hop & Memory (in MB) \\ 
-			\hline
+			& \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} & \textbf{Memory (in MB)} \\ 
+			\hline \hline
 			2-level CSR Adjacency Lists& 7.78 & 10.40 & 11.23 & 905.23 \\ 
 			\hline
 			Vertex Property Columns& 5.23 & 8.28 & 8.41 & 478.86 \\ 
