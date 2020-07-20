@@ -1,7 +1,7 @@
 \chapter{Evaluation}
 \label{c:evaluation}
 
-We integrate our work in GraphflowDB which is an in-memory \gls{gdbms}. It stores the edge and vertex properties as variable-sized records index by their IDs, while adjacency lists are partitioned by edge label-partitioned list of 8-byte vertex and edge IDs. The goal of our experiments is two-fold. First, we show the effectiveness of our columnar storage and compression techniques from the point of memory requirements. We show that redesigning the storage layer of \gls{gdbms} using columns that can harness different types of structures from the graph can compact the storage by up to 4x. Secondly, we evaluate the query performance in light of different optimizations and techniques. In particular, we organize our experiments as follows:
+We integrate our columnar storage and techniques in GraphflowDB which is an in-memory \gls{gdbms}. It stores the edge and vertex properties as variable-sized records index by their IDs, while adjacency lists are partitioned by edge label-partitioned list of 8-byte vertex and edge IDs. The goal of our experiments is two-fold. First, we show the effectiveness of our columnar storage and compression techniques from the point of memory requirements. We show that redesigning the storage layer of \gls{gdbms} using columns that can harness different types of structures from the graph can compact the storage by up to 4x. Secondly, we evaluate the query performance in light of different optimizations and techniques. In particular, we organize our experiments as follows:
 
 \begin{enumerate}
 	\item \textbf{Compression in Adjacency Lists:}  In Section~\ref{exp:adjacency-list-exp} we show the compaction in the size of our adjacency lists by applying the range of optimizations defined Sections~\ref{c:columnar-storage} and~\ref{columnar-compression}. For each of the optimization, we state the cause of the reduction in size and whether it will affect the query performance or not.
@@ -58,6 +58,9 @@ Note that \texttt{+COLS} and \texttt{+NULL} are oblivious to the order in which 
 
 \begin{table}
 	\centering
+	\bgroup
+	\setlength{\tabcolsep}{8pt}
+	\def\arraystretch{1.2}%  1 is the default, change whatever you need
 	\begin{tabular}{ |c|c|c|c|c|c|c| } 
 		\hline
 		& \texttt{GF-OLD} & \texttt{+COLS} & \texttt{+NEW-IDS} & \texttt{+0-CMPRS} & \texttt{+OMIT}& \texttt{+NULL} \\ 
@@ -73,6 +76,7 @@ Note that \texttt{+COLS} and \texttt{+NULL} are oblivious to the order in which 
 		Reduction Factor& & \textbf{1.08x} & \textbf{1.31x} & \textbf{2.17x} & \textbf{3.18x} & \textbf{3.55x} \\ 
 		\hline
 	\end{tabular}
+	\egroup
 	\captionsetup{justification=centering}
 	\caption{Memory utilization (in GB) by Adjacency lists of \gls{ldbc} 100. }
 	\label{tbl:mem1}
@@ -94,12 +98,38 @@ Table~\ref{tbl:mem1} shows the memory utiliation (in GB) by the adjacency lists 
 \section{Effectiveness of Single-Directional Property Pages}
 \label{exp:property-pages}
 
+\begin{table}
+	\centering
+	\bgroup
+	\setlength{\tabcolsep}{8pt}
+	\def\arraystretch{1.2}%  1 is the default, change whatever you need
+	\begin{tabular}{ |c|c|c| } 
+		\hline
+		& 1-hop & 2-hop \\ 
+		\hline
+		Edge Property Columns& 3.42 & 308.18 \\ 
+		\hline
+		\multirow{2}{*}{Single-directional Property Lists}& 1.03 & 125.65 \\ 
+		& \textbf{3.32x} & \textbf{2.42x} \\ 
+		\hline 
+		\multirow{2}{*}{Single-directional Property Pages} & 1.22 & 152.89 \\ 
+			& \textbf{2.80x} & \textbf{2.03x} \\ 
+		\hline 
+	\end{tabular}
+	\egroup
+	\captionsetup{justification=centering}
+	\caption{Memory utilization (in GB) by Adjacency lists of \gls{ldbc} 100. }
+	\label{tbl:mem1}
+\end{table}
+
 Next, we demonstrate the benefits of reading edge properties from the single-directional property pages.
 
 \section{Vertex Property Columns for Single Cardinality Edges vs. CSR Adjacency Lists}
 \label{exp:single-cardinality}
 
-In this experiment, we demonstrate the effectiveness of keeping the edges with the single cardinality label in vertex property columns of either its source or destination vertex. Our goal is two-fold, 1) we show that the storage cost of keeping edges in vertex property columns is significantly less than keeping in 2-level CSR, and 2) accessing edges from vertex property column is more efficient. 
+In this experiment, we demonstrate the effectiveness of keeping the edges with the single cardinality label in vertex property columns of either its source or destination vertex. We show, 1) that the storage cost of keeping edges in vertex property columns is significantly less than keeping in 2-level CSR, and 2) accessing edges from vertex property column is more efficient. 
+
+
 
 Our workload consist of simple k-hop for $k=1,2,3$. queries on \texttt{replyOf} edges of \gls{ldbc} schema. 
 
@@ -107,7 +137,10 @@ Our workload consist of simple k-hop for $k=1,2,3$. queries on \texttt{replyOf} 
 	\centering
 	\begin{subtable}{1\textwidth}
 		\centering
-		\begin{tabular}{ |c|c|c|c|c| } 
+		\bgroup
+		\setlength{\tabcolsep}{8pt}
+		\def\arraystretch{1.2}%  1 is the default, change whatever you need
+		\begin{tabular}{ |c|c|c|c|c| }
 			\hline
 			& 1-hop & 2-hop & 3-hop & Memory (in MB) \\ 
 			\hline
@@ -118,12 +151,16 @@ Our workload consist of simple k-hop for $k=1,2,3$. queries on \texttt{replyOf} 
 			Reduction Factor& \textbf{1.62x} & \textbf{1.57x} & \textbf{1.64x} & \textbf{1.51x} \\ 
 			\hline
 		\end{tabular}
+		\egroup
 		\captionsetup{justification=centering}
 		\caption{Uncompressed}
 		\label{tbl:mem2}
 	\end{subtable}
 	\begin{subtable}{1\textwidth}
 		\centering
+		\bgroup
+		\setlength{\tabcolsep}{8pt}
+		\def\arraystretch{1.2}%  1 is the default, change whatever you need
 		\begin{tabular}{ |c|c|c|c|c| } 
 			\hline
 			& 1-hop & 2-hop & 3-hop & Memory (in MB) \\ 
@@ -135,6 +172,7 @@ Our workload consist of simple k-hop for $k=1,2,3$. queries on \texttt{replyOf} 
 			Reduction Factor& \textbf{1.49x} & \textbf{1.26x} & \textbf{1.34x} & \textbf{1.89x} \\ 
 			\hline
 		\end{tabular}
+		\egroup
 		\captionsetup{justification=centering}
 		\caption{Null Compressed}
 		\label{tbl:mem2}
