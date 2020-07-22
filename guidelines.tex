@@ -128,7 +128,7 @@ If compression is used, the system should be able to decompress arbitrary single
 	Such structure in data provides an opportunity to design more efficient and simpler data structures for accessing the storage layer of \gls{gdbms}. Our second desideratum is:
 	
 	\begin{desideratum}
-		Exploit the above three commonly appearing structure in the graph data to, 1) compress the data to save space, and 2) provide faster access to the data.
+		Exploit the above three commonly appearing structure in the graph data to (i) compress the data to save space; and (ii) provide faster access to the data.
 	\end{desideratum}
 	
 	\vspace{-10pt}
@@ -137,8 +137,9 @@ If compression is used, the system should be able to decompress arbitrary single
 	\begin{itemize}
 		\item \textbf{Structured/unstructured edge:} An edge of a particular label, that follows above-mentioned points , is called an structured edge. An edge that is not structured, is called an unstructured edge.
 		
-		\item \textbf{Structured/unstructured property:} A structured property is a property on a vertex or edge that, 1) can be determined by the vertex type or edge label of that entity; 2) appears in a significant fraction of the vertices of edges of a particular label; and 3) have the same data type in all its occurrence. Any property that is not a structured property, is considered unstructured.
+		\item \textbf{Structured/unstructured property:} A structured property is a property on a vertex or edge that; (i) can be determined by the vertex type or edge label of that entity; and (ii) have the same data type in all its occurrence. We will also require that the property is not too sparse, i.e., appears in a significant fraction of the vertices of edges of a particular label. Any property that is not a structured property, is considered unstructured.
 		
+		%  To make the definition more concrete (in our evaluations will take 20\% to make the definition more concrete)
 	\end{itemize}
 	
 	
