@@ -3,7 +3,10 @@
 \usepackage{csquotes, array, multirow}
 \usepackage{xcolor}
 \usepackage{listings}
-\usepackage[pdftex]{graphicx} 
+\usepackage[pdftex]{graphicx}
+\PassOptionsToPackage{<options>}{graphicx} 
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
 \usepackage{caption,subcaption}
 \usepackage[pdftex,pagebackref=false]{hyperref} 
 \usepackage[automake,toc,abbreviations]{glossaries-extra} 
@@ -89,8 +92,6 @@
 
 \newtheorem{example}{Example}
 
-\theoremstyle{theorem}
-
 \newtheoremstyle{dstyle}
 {10pt}
 {20pt}
@@ -119,5 +120,7 @@
 
 \graphicspath{img}
 
-
-
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, inner sep=1pt, text badly centered, text width=1.2cm, draw=black, fill=blue!10]
+\tikzstyle{decision} = [diamond, minimum width=1cm, minimum height=1cm, text width=2cm, text badly centered, inner sep=1pt, draw=black, fill=green!10]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text width=3cm, text centered, draw=black, fill=red!10]
+\tikzstyle{arrow}=[draw, -latex]

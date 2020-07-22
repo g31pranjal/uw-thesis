@@ -44,9 +44,8 @@ In this section, we review the general execution of queries in a \gls{gdbms} by 
 		WHERE a.age $>$ 22 AND b.estd < 2015
 		RETURN *\end{lstlisting}
 	}
-	This query returns all the PERSON vertices and their workplaces, constrained to the condition that the \textsc{\char13}\texttt{age}\textsc{\char13} property of PERSON vertex has a value that is greater than 22 and \textsc{\char13}\texttt{established}\textsc{\char13} property of ORG vertex is less than 2015. a and b are query vertex variables while e is a query edge variable.
+	This query returns all the \texttt{PERSON} vertices and their workplaces, constrained to the condition that the \textsc{\char13}\texttt{age}\textsc{\char13} property of \texttt{PERSON} vertex has a value that is greater than 22 and \textsc{\char13}\texttt{established}\textsc{\char13} property of \texttt{ORG} vertex is less than 2015. a and b are query vertex variables while e is a query edge variable.
 \end{example}
-\vspace{-5pt}
 
 The following are the major operators used for matching the subgraph pattern and evaluating predicates in a query.
 
@@ -118,11 +117,11 @@ If compression is used, the system should be able to decompress arbitrary single
 	
 	\begin{enumerate}
 		
-		\item \textbf{Edge label determines the source and destination vertex labels.} Often, edge labels in the graph data have a well-defined set of source and destination vertex label(s). This restricts the vertices to having inward or outward edges of only a definite set of labels. In our example graph, edges with label FOLLOWS only exists between vertices of label PERSON.
+		\item \textbf{Edge label determines the source and destination vertex labels.} Often, edge labels in the graph data have a well-defined set of source and destination vertex label(s). This restricts the vertices to having inward or outward edges of only a definite set of labels. In our example graph, edges with label FOLLOWS only exists between vertices of label \texttt{PERSON}.
 		
 		\item \textbf{Edge label has fixed cardinality.} The number of edges of a particular label to which a source or destination vertex can be associated is a property of the edge label. We call this the \emph{cardinality} of an edge label. \emph{One-to-one} cardinality for a label $l_e$ means that each source vertex can be connected to at most one destination vertex through an edge with label $l_e$ and vice versa. \emph{Many-to-one} permits a single edge of a label from a source vertex but multiple edges to a destination vertex. Similar analogy can be applied to \emph{one-to-many} and \emph{many-to-many} cardinality edge labels.
 		
-		\item \textbf{Label determines properties on vertices and edges.} Similar to the attributes of a relational table, properties on an edge or vertex and the datatypes of these properties can \emph{often} be determined by its edge or vertex label. In our example graph, all vertices having label PERSON have 3 properties: name: \texttt{STRING}, age: \texttt{INT} and gender: \texttt{STRING}. As long as a significant fraction of vertices and edges with a particular label have a common set of properties, a system can exploit this structured to store these properties more efficiently. 
+		\item \textbf{Label determines properties on vertices and edges.} Similar to the attributes of a relational table, properties on an edge or vertex and the datatypes of these properties can \emph{often} be determined by its edge or vertex label. In our example graph, all vertices having label \texttt{PERSON} have 3 properties: name: \texttt{STRING}, age: \texttt{INT} and gender: \texttt{STRING}. As long as a significant fraction of vertices and edges with a particular label have a common set of properties, a system can exploit this structured to store these properties more efficiently. 
 		
 	\end{enumerate}
 	
@@ -136,7 +135,7 @@ If compression is used, the system should be able to decompress arbitrary single
 	However, not all data in graph databases have structure. As a working terminology, we will use the following terms:
 	
 	\begin{itemize}
-		\item \textbf{Structured/unstructured edge:} An edge of a particular label, that follows above-mentioned points \ref{gdln:graph-schema-rule1} and \ref{gdln:graph-schema-rule2}, is called an structured edge. An edge that is not structured, is called an unstructured edge.
+		\item \textbf{Structured/unstructured edge:} An edge of a particular label, that follows above-mentioned points , is called an structured edge. An edge that is not structured, is called an unstructured edge.
 		
 		\item \textbf{Structured/unstructured property:} A structured property is a property on a vertex or edge that, 1) can be determined by the vertex type or edge label of that entity; 2) appears in a significant fraction of the vertices of edges of a particular label; and 3) have the same data type in all its occurrence. Any property that is not a structured property, is considered unstructured.
 		
