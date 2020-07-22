@@ -7,22 +7,29 @@
 	volume={abs/2004.00130}
 }
 
-@article{compress-transitive-closure,
-	author = {Jagadish, H. V.},
-	title = {A Compression Technique to Materialize Transitive Closure},
-	year = {1990},
-	issue_date = {Dec. 1990},
+@article{zipg,
+	title={ZipG: A Memory-efficient Graph Store for Interactive Queries},
+	author={Anurag Khandelwal and Zongheng Yang and Evan Ye and Rachit Agarwal and Ion Stoica},
+	journal={Proceedings of the 2017 ACM International Conference on Management of Data},
+	year={2017}
+}
+
+@article{fct-databases,
+	author = {Olteanu, Dan and Schleich, Maximilian},
+	title = {Factorized Databases},
+	year = {2016},
+	issue_date = {June 2016},
 	publisher = {Association for Computing Machinery},
 	address = {New York, NY, USA},
-	volume = {15},
-	number = {4},
-	issn = {0362-5915},
-	url = {https://doi.org/10.1145/99935.99944},
-	doi = {10.1145/99935.99944},
-	journal = {ACM Trans. Database Syst.},
-	month = dec,
-	pages = {558–598},
-	numpages = {41}
+	volume = {45},
+	number = {2},
+	issn = {0163-5808},
+	url = {https://doi.org/10.1145/3003665.3003667},
+	doi = {10.1145/3003665.3003667},
+	journal = {SIGMOD Rec.},
+	month = sep,
+	pages = {5–16},
+	numpages = {12}
 }
 
 @article{boncz-phd,
@@ -163,16 +170,6 @@
 	year       = {2019},
 }
 
-@article{monetdb,
-	author = {Idreos, Stratos and Groffen, F. and Nes, Niels and Manegold, Stefan and Mullender, Sjoerd and Kersten, Martin},
-	year = {2012},
-	month = {01},
-	pages = {},
-	title = {MonetDB: Two Decades of Research in Column-oriented Database Architectures},
-	volume = {35},
-	journal = {IEEE Data Eng. Bull.}
-}
-
 @article{dat-comp,
 	author = {Graefe, Goetz and Shapiro, Leonard},
 	year = {2001},
@@ -210,6 +207,26 @@
 	publisher={VLDB Endowment}
 }
 
+@article {yale,
+	title = {The (new) Yale sparse matrix package},
+	journal = {Elliptic problem solvers II},
+	year = {1983},
+	month = {1983///},
+	pages = {45 - 52},
+	author = {Eisenstat, S. C and Elman, Howard and Schultz, M. H and Sherman, A. H}
+}
+
+@article{rdf-3x,
+	author = {Neumann, Thomas and Weikum, Gerhard},
+	year = {2010},
+	month = {02},
+	pages = {91-113},
+	title = {The RDF3X engine for scalable management of RDF data},
+	volume = {19},
+	journal = {The Vldb Journal - VLDB},
+	doi = {10.1007/s00778-009-0165-y}
+}
+
 @inproceedings{pt2,
 	title={Efficient RDF storage and retrieval in Jena2},
 	author={Wilkinson, Kevin and Sayers, Craig and Kuno, Harumi and Reynolds, Dave},
@@ -228,15 +245,17 @@
 	journal = {Lecture Notes in Informatics (LNI), Proceedings - Series of the Gesellschaft fur Informatik (GI)}
 }
 
-@article{rdf-3x,
-	author = {Neumann, Thomas and Weikum, Gerhard},
-	year = {2010},
-	month = {02},
-	pages = {91-113},
-	title = {The RDF3X engine for scalable management of RDF data},
-	volume = {19},
-	journal = {The Vldb Journal - VLDB},
-	doi = {10.1007/s00778-009-0165-y}
+@inproceedings {succinct,
+	author = {Rachit Agarwal and Anurag Khandelwal and Ion Stoica},
+	title = {Succinct: Enabling Queries on Compressed Data},
+	booktitle = {12th {USENIX} Symposium on Networked Systems Design and Implementation ({NSDI} 15)},
+	year = {2015},
+	isbn = {978-1-931971-218},
+	address = {Oakland, CA},
+	pages = {337--350},
+	url = {https://www.usenix.org/conference/nsdi15/technical-sessions/presentation/agarwal},
+	publisher = {{USENIX} Association},
+	month = may,
 }
 
 @inproceedings{compact-rep-graph,
@@ -255,6 +274,39 @@
 	location = {Washington, D.C.},
 	series = {MLG ’10}
 }
+
+@INPROCEEDINGS{stinger,
+
+	author={D. {Ediger} and R. {McColl} and J. {Riedy} and D. A. {Bader}},
+
+	booktitle={2012 IEEE Conference on High Performance Extreme Computing}, 
+
+	title={STINGER: High performance data structure for streaming graphs}, 
+
+	year={2012},
+
+	volume={},
+
+	number={},
+
+	pages={1-5},
+}
+
+@INPROCEEDINGS{distinger,
+
+	author={G. {Feng} and X. {Meng} and K. {Ammar}},
+
+	booktitle={2015 IEEE International Conference on Big Data (Big Data)}, 
+
+	title={DISTINGER: A distributed graph data structure for massive dynamic graph processing}, 
+
+	year={2015},
+
+	volume={},
+
+	number={},
+
+	pages={1814-1822},}
 
 @inproceedings{rdf-vertical,
 	title={Scalable semantic web data management using vertical partitioning},
@@ -334,24 +386,6 @@
 	hal_version = {v1},
 }
 
-@Inbook{Claude2010,
-	author="Claude, Francisco
-	and Navarro, Gonzalo",
-	editor="Elomaa, Tapio
-	and Mannila, Heikki
-	and Orponen, Pekka",
-	title="Extended Compact Web Graph Representations",
-	bookTitle="Algorithms and Applications: Essays Dedicated to Esko Ukkonen on the Occasion of His 60th Birthday",
-	year="2010",
-	publisher="Springer Berlin Heidelberg",
-	address="Berlin, Heidelberg",
-	pages="77--91",
-	abstract="Many relevant Web mining tasks translate into classical algorithms on the Web graph. Compact Web graph representations allow running these tasks on larger graphs within main memory. These representations at least provide fast navigation (to the neighbors of a node), yet more sophisticated operations are desirable for several Web analyses.",
-	isbn="978-3-642-12476-1",
-	doi="10.1007/978-3-642-12476-1_5",
-	url="https://doi.org/10.1007/978-3-642-12476-1_5"
-}
-
 @inproceedings{k2trees,
 	title={k2-Trees for Compact Web Graph Representation},
 	author={Nieves R. Brisaboa and Susana Ladra and Gonzalo Navarro},
@@ -366,23 +400,6 @@
 	pages={213--222},
 	year={2001},
 	organization={IEEE}
-}
-
-@inproceedings{compress-nbr-q,
-	author = {Maserrat, Hossein and Pei, Jian},
-	title = {Neighbor Query Friendly Compression of Social Networks},
-	year = {2010},
-	isbn = {9781450300551},
-	publisher = {Association for Computing Machinery},
-	address = {New York, NY, USA},
-	url = {https://doi.org/10.1145/1835804.1835873},
-	doi = {10.1145/1835804.1835873},
-	booktitle = {Proceedings of the 16th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
-	pages = {533–542},
-	numpages = {10},
-	keywords = {social networks, compression, MPk linearization},
-	location = {Washington, DC, USA},
-	series = {KDD ’10}
 }
 
 @inproceedings{feder,
@@ -596,20 +613,22 @@
 }
 
 @inproceedings{beckmann:sparse,
-
 	author={J. L. {Beckmann} and A. {Halverson} and R. {Krishnamurthy} and J. F. {Naughton}},
-
 	booktitle={22nd International Conference on Data Engineering (ICDE'06)}, 
-
 	title={Extending RDBMSs To Support Sparse Datasets Using An Interpreted Attribute Storage Format}, 
-
 	year={2006},
-
 	volume={},
-
 	number={},
-
 	pages={58-58},
+}
+
+@inproceedings{pax,
+	title={Weaving Relations for Cache Performance.},
+	author={Ailamaki, Anastassia and DeWitt, David J and Hill, Mark D and Skounakis, Marios},
+	booktitle={VLDB},
+	volume={1},
+	pages={169--180},
+	year={2001}
 }
 
 @article{westmann-comp,
@@ -628,6 +647,15 @@
 	month = sep,
 	pages = {55–67},
 	numpages = {13}
+}
+
+@misc{besta2018survey,
+	title={Survey and Taxonomy of Lossless Graph Compression and Space-Efficient Graph Representations},
+	author={Maciej Besta and Torsten Hoefler},
+	year={2018},
+	eprint={1806.01799},
+	archivePrefix={arXiv},
+	primaryClass={cs.DS}
 }
 
 @Misc{neo4j,
@@ -661,9 +689,44 @@
 	howpublished = {\url{https://neo4j.com/developer/graph-database}}
 }
 
+@Misc{pgql,
+	key        = {pgql},
+	title      = {Property Graph Query Language},
+	year       = {2020},
+	howpublished = {\url{https://pgql-lang.org/}}
+}
+
+@Misc{redisgraph,
+	key        = {redisgraph},
+	title      = {RedisGraph},
+	year       = {2020},
+	howpublished = {\url{https://oss.redislabs.com/redisgraph/}}
+}
+
+@Misc{redis,
+	key        = {redis},
+	title      = {Redis},
+	year       = {2020},
+	howpublished = {\url{https://redis.io/}}
+}
+
+@Misc{graphblas,
+	key        = {grapblas},
+	title      = {GraphBLAS},
+	year       = {2020},
+	howpublished = {\url{https://http://graphblas.org/}}
+}
+
 @Misc{oracle,
 	key        = {oracle},
 	title      = {{{Oracle Spatial and Graph}}},
 	year       = {2020},
 	howpublished = {\url{https://www.oracle.com/database/technologies/spatialandgraph.html}}
+}
+
+@Misc{oracle-col,
+	key        = {oracle-col},
+	title      = {{{Oracle Spatial and Graph}}},
+	year       = {2020},
+	howpublished = {\url{cs.oracle.com/en/database/oracle/oracle-database/12.2/inmem/in-memory-column-store-architecture.html}}
 }
