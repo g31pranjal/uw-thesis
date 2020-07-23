@@ -31,7 +31,7 @@ Noticeably missing in our evaluations is comparisons against the other \gls{gdbm
 	\label{fig:ldbc-schema}
 \end{figure}
 
-\noindent \textbf{Dataset:} We use the \gls{ldbc}~\cite{ldbc} dataset generator to generate synthetic graph datasets on which we evaluate all our experiments. \gls{ldbc} is a popular benchmark to generate large social graph data with attributes on nodes and edges. The generated social graph is highly structured which can be seen from the schema in Figure~\ref{fig:ldbc-schema}. In fact all of the edges and edge and vertex properties are structured according to our definition from Chapter~\ref{c:guidelines} but several properties and edges are very sparse. For example, property X on vertices with type X appears in less than X\% of the nodes with type X.\todo{Complete the X's.}  We generate the data at the scale factor of 100 (LDBC100) that consists of over 1.7 billion edges and 0.3 billion vertices. We refer to this dataset as LDBC100
+\noindent \textbf{Dataset:} We use the \gls{ldbc}~\cite{ldbc} dataset generator to generate synthetic graph datasets on which we evaluate all our experiments. \gls{ldbc} is a popular benchmark to generate large social graph data with attributes on nodes and edges. The generated social graph is highly structured which can be seen from the schema in Figure~\ref{fig:ldbc-schema}. In fact all of the edges and edge and vertex properties are structured according to our definition from Chapter~\ref{c:guidelines} but several properties and edges are very sparse. For example, property \texttt{language} and \texttt{content} on vertices with type \texttt{STRING} appears in less than 15\% of the nodes with label \texttt{post}. We generate the data at the scale factor of 100 that consists of over 1.7 billion edges and 0.3 billion vertices. We refer to this dataset as LDBC100.
 
 \noindent \textbf{Query Workload:} We use a micro benchmark we generate that consists of 1-, 2-, and 3-hop path queries that optionally contain predicates on vertex and edge properties and aggregations. These queries serve as a stress test for evaluating access to the underlying storage, which our techniques optimize. 
 %For instance, a simple 1-hop query tests more rigorously for access from adjacency lists than a query that involves filtering and aggregations. 
@@ -86,7 +86,7 @@ We create multiple configurations on GraphflowDB, each with a different set of o
 	\centering
 	\includegraphics[scale=0.75]{img/opti-breakup}
 	\captionsetup{justification=centering}
-	\caption{Breakup of memory gains by applying different optimizations on Adjacency Lists of \gls{ldbc} scale factor 100 dataset.}
+	\caption{Breakup of memory gains by applying different optimizations on Adjacency Lists of LDBC100 dataset.}
 	\label{fig:opti-breakup}
 \end{figure}
 
@@ -267,7 +267,7 @@ In our second experiment, we evaluate accessing vertex properties from compresse
 \section{List-based Processing vs. Volcano-styled Query Execution}
 \label{exp:list-based}
 
-In this section, we compare the execution of query on our list-based processing to that on volcano-styled processing. We use the GraphflowDB with our new columnar storage to derive two configurations, 1) \texttt{VOLCANO}, that uses the conventional volcano-styled query processor, and 2) \texttt{LIST-BASED}, that uses our new list-based query processor. Our work load consist of 2 variants of k-hop, $k=1,2,3$ queries that reads the \texttt{replyOf} edges of the \texttt{person} vertex in the \gls{ldbc} 100 dataset: 1) \textbf{k-hop with property read}, performs k-hop with reading the vertex property \texttt{date} of the last person vertex and returns count, and 2) \textbf{simple k-hop}, that do not read any property and returns the count. We evaluate the queries on similar plans on both the query processors, except that the last \texttt{JOIN} operation and \texttt{PROPERTY READER} (that depends on the last \texttt{JOIN}) operates on the list in case of list-based query processor.
+In this section, we compare the execution of query on our list-based processing to that on volcano-styled processing. We use the GraphflowDB with our new columnar storage to derive two configurations, 1) \texttt{VOLCANO}, that uses the conventional volcano-styled query processor, and 2) \texttt{LIST-BASED}, that uses our new list-based query processor. Our work load consist of 2 variants of k-hop, $k=1,2,3$ queries that reads the \texttt{replyOf} edges of the \texttt{person} vertex in the LDBC100 dataset: 1) \textbf{k-hop with property read}, performs k-hop with reading the vertex property \texttt{date} of the last person vertex and returns count, and 2) \textbf{simple k-hop}, that do not read any property and returns the count. We evaluate the queries on similar plans on both the query processors, except that the last \texttt{JOIN} operation and \texttt{PROPERTY READER} (that depends on the last \texttt{JOIN}) operates on the list in case of list-based query processor.
 
 \begin{table}
 	\centering
