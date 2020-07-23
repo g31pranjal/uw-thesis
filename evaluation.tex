@@ -267,11 +267,15 @@ In our second experiment, we evaluate accessing vertex properties from compresse
 \section{List-based Processing vs. Volcano-styled Query Execution}
 \label{exp:list-based}
 
-In this section, we compare the execution of query on our list-based processing to that on volcano-styled processing. We use the GraphflowDB with our new columnar storage to derive two configurations, 1) \texttt{VOLCANO}, that uses the conventional volcano-styled query processor, and 2) \texttt{LIST-BASED}, that uses our new list-based query processor. Our work load consist of 2 variants of k-hop, $k=1,2,3$ queries that reads the \texttt{replyOf} edges of the \texttt{person} vertex in the \gls{ldbc} 100 dataset: 1) \textbf{k-hop with property read}, performs k-hop with reading the vertex property \texttt{date} of the last person vertex and returns count, and 2) \textbf{simple k-hop}, that do not read any property and returns the count. We evaluate the queries on similar plans on both the query processors, except that the last \texttt{JOIN} operation and \texttt{PROPERTY READER} (that depends on the last \texttt{JOIN}) operates on the list in case of list-based query processor.
+We next provide a preliminary set of experiments that compare the performance of our list-based processing to Volcano-style processing. We use the GraphflowDB with our new columnar storage under two configurations; (i) \texttt{VOLCANO}, that uses the conventional Volcano-styled processor, which we achieve by ensuring plans do not use our vector-oriented operators (e.g., \texttt{LIST-JOIN}); and (ii) \texttt{LIST-BASED} that uses our new list-based operators. Our workload consist of simple 1-, 2-, and 3-hop queries that read the \texttt{replyOf} edges of the \texttt{person} vertex in LDBC100 and returns the count of final matches. We evaluate the queries on similar plans that perform the same sequence of joins.
+Table~\ref{tbl:list-volcano} shows the query performance of the 2 query processors. As we expect, list-based processor is more performant than Volcano-style processor. Specifically, we obtain between 1.33x and 2.72x runtime speed up. Our evaluation of list-based processing is currently very preliminary and at the time of this writing we are in the process of implementing and optimizing our list-based operators. We leave a more extensive evaluation of the benefits and limitations of list-based processing to future work.
+
+%However, when the query reads the property of last vertex (see Table~\ref{tbl:s5}), the performance drops significantly and we see the maximum speed-up of only 1.13x. The reason for this difference is the fact that while reading properties, the \texttt{LIST PROPERTY READER} has to iterate over the contents of the adjacency list being joined by the \texttt{LIST JOIN}, which in our current implementation is a costly operation. However, iteration over the list can be completely bypassed in case other operators in the query plan do not depend on the values of the list and hence, saves computation. 
+% on both query processors, except that the last \texttt{JOIN} operation and \texttt{PROPERTY READER} (that depends on the last \texttt{JOIN}) operates on the list in case of list-based query processor.
 
 \begin{table}
 	\centering
-	\begin{subtable}{1\textwidth}
+%	\begin{subtable}{1\textwidth}
 		\centering
 		\bgroup
 		\setlength{\tabcolsep}{8pt}
@@ -289,33 +293,34 @@ In this section, we compare the execution of query on our list-based processing 
 		\egroup
 		\captionsetup{justification=centering}
 		\caption{Without reading vertex property}
-		\label{tbl:s4}
-	\end{subtable}
-	\begin{subtable}{1\textwidth}
-		\centering
-		\bgroup
-		\setlength{\tabcolsep}{8pt}
-		\def\arraystretch{1.2}
-		\begin{tabular}{ |c|c|c|c| }
-			\hline
-			& \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} \\ 
-			\hline \hline
-			\texttt{VOLCANO}& 3.35 & 350.54 & 922.35 \\ 
-			\hline
-			\multirow{2}{*}{\texttt{LIST-BASED}}& 3.10 & 310.21 & 810.53 \\ 
-			& \textbf{1.08x} & \textbf{1.13x} & \textbf{1.12x} \\ 
-			\hline
-		\end{tabular}
-		\egroup
-		\captionsetup{justification=centering}
-		\caption{With reading vertex property}
-		\label{tbl:s5}
-	\end{subtable}
+%		\label{tbl:s4}
+%	\end{subtable}
+%	\begin{subtable}{1\textwidth}
+%		\centering
+%		\bgroup
+%		\setlength{\tabcolsep}{8pt}
+%		\def\arraystretch{1.2}
+%		\begin{tabular}{ |c|c|c|c| }
+%			\hline
+%			& \textbf{1-hop} & \textbf{2-hop} & \textbf{3-hop} \\ 
+%			\hline \hline
+%			\texttt{VOLCANO}& 3.35 & 350.54 & 922.35 \\ 
+%			\hline
+%			\multirow{2}{*}{\texttt{LIST-BASED}}& 3.10 & 310.21 & 810.53 \\ 
+%			& \textbf{1.08x} & \textbf{1.13x} & \textbf{1.12x} \\ 
+%			\hline
+%		\end{tabular}
+%		\egroup
+%		\captionsetup{justification=centering}
+%		\caption{With reading vertex property}
+%		\label{tbl:s5}
+%	\end{subtable}
+	\label{tbl:list-volcano}
 	\captionsetup{justification=centering}
 	\caption{Runtime (in sec) for two set of k-hop queries using volcano-styled query processing and our new list-based query processing.  }
 \end{table}
 
-Table~\ref{tbl:s4} shows the query performance of on the 2 query processors when the query do not read any of the edge or vertex properties. The maximum speed-up that we get is 2.27x. However, when the query reads the property of last vertex (see Table~\ref{tbl:s5}), the performance drops significantly and we see the maximum speed-up of only 1.13x. The reason for this difference is the fact that while reading properties, the \texttt{LIST PROPERTY READER} has to iterate over the contents of the adjacency list being joined by the \texttt{LIST JOIN}, which in our current implementation is a costly operation. However, iteration over the list can be completely bypassed in case other operators in the query plan do not depend on the values of the list and hence, saves computation. 
+
 
 
 
