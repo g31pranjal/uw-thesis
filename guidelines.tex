@@ -142,26 +142,25 @@ If compression is used, the system should be able to decompress arbitrary single
 		%  To make the definition more concrete (in our evaluations will take 20\% to make the definition more concrete)
 	\end{itemize}
 	
-	
-	We focus on optimizing the storage of structured part of the graph data in this thesis. It forms an interesting research topic to optimize a system for unstructured part of graph data. A standard approach is to serialize the key, datatype and value of each property in variable-length records. Structured property storage can, however, be optimized to benefit memory footprint as well as access performance.
+	We focus on optimizing the storage of structured part of the graph data in this thesis. Optimizing a system for unstructured part of graph data is an interesting research topic for the future work. A standard approach is to serialize the key, datatype and value of each property in variable-length records. Structured property storage can, however, be optimized to benefit memory footprint as well as access performance.
 	
 \end{guideline}
 
 \begin{guideline}[Queries read a small subset of the vertex or edge properties]
-	In order to understand the nature of queries user ask on \gls{gdbms}, we conducted a survey of 100 StackOverflow questions containing openCypher queries. We focused on queries of analytical nature and discarded transactional ones like insert, delete and update. We observe the following: 
+	In order to understand the nature of queries users ask a \gls{gdbms}, we conducted a survey of 100 StackOverflow questions containing openCypher queries. We focused on queries of analytical nature and discarded transactional ones like insert, delete and update. We observe the following: 
 	
 	
 	\begin{itemize}
 		
 		\item Out of the 100 queries, 68 accessed at least one of the properties on a vertex or an edge. Of these, 61 accessed vertex properties and 13 accessed edge properties.
 		
-		\item Only 11 queries returned all the properties of a query edge or vertex, while 35 of them return specific properties.
+		\item Only 11 queries returned all the properties of a query edge or vertex, while 35 of them returned specific properties.
 		
-		\item Average number of properties accessed by those queries that explicitly return a set of properties was only 1.6.
+		\item The average number of properties accessed by those queries that explicitly return a set of properties was only 1.6.
 		
 	\end{itemize}
 	
-	We can observe that vertex properties are more popularly accessed as compared to edge properties and most of the queries only access 1 or at most 2 properties. This observation leads to our third desideratum:
+	We can observe that vertex properties are more popularly accessed as compared to edge properties and most of the queries only access 1 or at most 2 properties. This observation leads to our fourth and final desideratum:
 	
 	\begin{desideratum}
 		Allow fast access to individual properties of multiple vertices instead of all properties of a single vertex.
