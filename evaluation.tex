@@ -264,8 +264,6 @@ Tables~\ref{tbl:s1} and~\ref{tbl:s2} already compares reading edges from compres
 
 In our second experiment, we evaluate accessing vertex properties from compressed and uncompressed vertex columns using k-hop queries. We use the \texttt{V-COL-C} and \texttt{V-COL-UNC} configurations and keep the edge storage uncompressed. We run the workload from Section~\ref{exp:single-cardinality} consisting of k-hop queries over \texttt{replyOf} edges. These queries are extended to include a condition that a \texttt{comment} $b$ is made on another \texttt{comment} $a$ such that $b$ has a \texttt{creationDate} that is within $\delta$ timespan of $a$'s. Table~\ref{tbl:s3} shows our results. Using compressed storage slows down our queries by at most 1.14x. Therefore compared to the vanilla null compression schemes, which are not practical, our prefix sum-based null compression scheme is a practical compression scheme that offers a good performance and memory trade-off.
 
-We note that, the experiments we demonstrated so far in this chapter demonstrated the memory and performance effects of the columnar storage techniques we introduced for GDBMSs. As we demonstrated, our storage has increased the scalability of GraphflowDB by 3.55x and often with non-trivial performance benefits (even for null compression when the columns are sparse enough). 
-
 \section{List-based Processing vs. Volcano-styled Query Execution}
 \label{exp:list-based}
 
