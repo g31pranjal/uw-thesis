@@ -100,13 +100,13 @@ We next outline a set of guidelines and desiderata for designing the physical da
 
 \begin{guideline}[Access to vertex properties are random and many adjacency lists are very small.]
 \label{gdln:fast-decompress}
-Guideline~\ref{gdln:vertices-unordered} implies that the system should take it granted that access to the vertex properties will require random accesses and will not be sequential. For example, when joining a node $v$ with its neighbours and accessing the \texttt{age} property of each neighbour, the accesses will be to non-consecutive locations in the vertex properties' storage based on the neighbour vertex IDs. Another property of real-world graphs is that adjacency lists of many vertices are very small because of the power-law distribution of adjacency lists. Systems should expect many very short adjacency lists, with only a few edges in them. Therefore during query processing with two or more joins, reading different adjacency lists and properties of these edges will require reading a short list followed by a random access and then reading another short list, and so on.
+Guideline~\ref{gdln:vertices-unordered} implies that the system should take it for granted that access to the vertex properties will require random accesses and will not be sequential. For example, when joining a node $v$ with its neighbours and accessing the \texttt{age} property of each neighbour, the accesses will be to non-consecutive locations in the vertex properties' storage based on the neighbour vertex IDs. Another property of real-world graphs is that adjacency lists of many vertices are very small because of the power-law distribution of adjacency lists. Systems should expect many very short adjacency lists, with only a few edges in them. Therefore during query processing with two or more joins, reading different adjacency lists and properties of these edges will require reading a short list followed by a random access and then reading another short list, and so on.
 
 In an in-memory setting, which we focus on in this work, our aim with compression is not to achieve high compression ratios but to optimize for high decompression rates or to avoid decompression of data altogether, as compression schemes with slow decompression hurt performance. Moreover, techniques that require decompressing blocks of data, say a few KBs, to only read a single property or a single short adjacency list can be prohibitively expensive. Hence, our second desideratum is:
 %We designed our columnar data structures for in-memory \gls{gdbms}. For these data structures, the focus with compression is not on achieving high compression ratios but to optimize for high decompression rates or to avoid decompression of data at all.
 \begin{desideratum}
 \label{des:compression}
-If compression is used, the system should be able to decompress arbitrary single elements in a compressed block in constant time.
+If compression is used, the system should be able to decompress arbitrary single elements in a compressed block in constant time with respect to the block size.
 \end{desideratum}  
 
 \end{guideline}
